@@ -623,7 +623,7 @@ export function adviceBoard(ctx) {
     s.tone = "warn"; s.headline = `売上が計画に届いていません（${fp(pm.achievement)}）。`;
     if (funnel.convertRate != null && funnel.convertRate < 50) { s.notDone.push(`商談の半分以上が案件になっていない（${fp(funnel.convertRate)}）。初回の提案・次の約束を取れていない可能性`); s.actions.push("商談の終わりに「次に会う日」を必ず決める。案件にならなかった商談の理由を見直す"); }
     if (funnel.open) { s.notDone.push(`見積りを出して返事待ちのもの ${funnel.open}件（${fm(funnel.openAmount / 10000)}万円）に、追いかけの連絡が入っていない恐れ`); s.actions.push("返事待ちの案件へ、今週中に状況を伺う連絡を入れる（優先は金額の大きいもの）"); }
-  } else { s.tone = "good"; s.headline = isNum(pm.achievement) ? `売上は計画どおり、または上回っています（${fp(pm.achievement)}）。` : "売上の計画との比較は、まだできません。"; s.actions.push("うまくいった商談の進め方を、型として残す（次の担当者も再現できるように）"); }
+  } else { s.tone = "good"; s.headline = isNum(pm.achievement) ? (pm.achievement >= 100 ? `売上は計画を上回っています（${fp(pm.achievement)}）。` : `売上は、ほぼ計画どおりです（${fp(pm.achievement)}）。あと少しで計画に届きます。`) : "売上の計画との比較は、まだできません。"; s.actions.push("うまくいった商談の進め方を、型として残す（次の担当者も再現できるように）"); }
   if (loss[0] && loss[0].count >= 1) { s.evidence.push(`失注・見送りの理由で多いのは「${loss[0].reason}」（${loss[0].count}件）`); s.actions.push(`「${loss[0].reason}」を先回りして伝える（見積の説明・条件の出し方を変える）`); }
   add(s);
   // 財務
