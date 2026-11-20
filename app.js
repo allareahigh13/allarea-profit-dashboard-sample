@@ -36,7 +36,7 @@ async function load() {
 
 /* ---------- 左のメニュー ---------- */
 function buildRail() {
-  const items = ROUTES.map(r => `${r.ai ? '<div class="sep"></div>' : ""}<a class="nav${r.sub ? " sub" : ""}${r.ai ? " ai" : ""}" href="#/${r.path}" data-path="${r.path}" aria-label="${esc(r.nav)}">${svgI(ICON[r.icon])}<span class="nm">${esc(r.nav)}</span><span class="tipn" aria-hidden="true">${esc(r.nav)}</span></a>`).join("");
+  const items = ROUTES.map(r => `${r.ai ? '<div class="sep"></div>' : ""}<a class="nav${r.sub ? " sub" : ""}${r.ai ? " ai" : ""}" href="#/${r.path}" data-path="${r.path}" aria-label="${esc(r.nav)}">${svgI(ICON[r.icon])}<span class="nm">${esc(r.nav)}</span><span class="tipn" aria-hidden="true">${esc(r.nav)}</span></a>`).join("") + `<div class="sep"></div><a class="nav manual-nav" href="manual.html" target="_blank" rel="noopener" aria-label="操作マニュアル（新しいタブで開きます）">${svgI(ICON.memo)}<span class="nm">操作マニュアル</span><span class="tipn" aria-hidden="true">操作マニュアル</span></a>`;
   $("#rail").innerHTML = `<div class="brand"><span class="logo"><svg viewBox="0 0 24 24"><path d="M4 16 12 4l8 12M8 14h8"/></svg></span><span class="t">経営ダッシュボード</span></div>${items}<canvas id="dots" aria-hidden="true"></canvas>`;
 }
 function markNav(r) {

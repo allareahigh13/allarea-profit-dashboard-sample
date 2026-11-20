@@ -371,6 +371,7 @@ export const ROUTES = [
 ];
 
 /* ---------- ページ上部（見出し・操作） ---------- */
+const MANUAL_ANCHOR = path => (path.startsWith("pl") ? "p-pl" : "p-" + path);
 export function headHtml(r) {
   const c = r.ctrl || [];
   let controls = "";
@@ -385,7 +386,7 @@ export function headHtml(r) {
   if (c.includes("refresh")) tools += `<button class="btn" id="btnRefresh" type="button">データ更新</button>`;
   if (c.includes("csv")) tools += `<button class="btn" id="btnCsv" type="button">CSV出力</button>`;
   if (tools) controls += `<div class="tools">${tools}</div>`;
-  return `<div><p class="eyebrow">${esc(r.eyebrow)}<span class="banner" id="banner"${state.data.isSample ? "" : " hidden"}>合成サンプル（実データではありません）</span></p><h1>${esc(r.title)}</h1><p class="sub">${esc(r.desc)}</p></div><div class="controls">${controls}</div>`;
+  return `<div><p class="eyebrow">${esc(r.eyebrow)}<span class="banner" id="banner"${state.data.isSample ? "" : " hidden"}>合成サンプル（実データではありません）</span></p><h1>${esc(r.title)}</h1><p class="sub">${esc(r.desc)}</p><p class="sub"><a class="manual-link" href="manual.html#${MANUAL_ANCHOR(r.path)}" target="_blank" rel="noopener">この画面の使い方（マニュアル）</a></p></div><div class="controls">${controls}</div>`;
 }
 
 /* ---------- CSV ---------- */
