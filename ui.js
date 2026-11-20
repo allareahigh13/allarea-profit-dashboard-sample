@@ -50,10 +50,10 @@ export function spark(vals, color, id) {
 }
 
 /** 目標進捗などの横棒。plan を渡すと「計画どおりならここ」の印を出す。 */
-export function pbar(pct, plan, label) {
+export function pbar(pct, plan, label, cls = "") {
   const p = Math.max(0, Math.min(100, Number.isFinite(pct) ? pct : 0));
   const m = Number.isFinite(plan) ? Math.max(0, Math.min(100, plan)) : null;
-  return `<div class="pbar" role="progressbar" aria-label="${esc(label || "進捗")}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p)}"><i style="width:${p}%"></i>${m == null ? "" : `<b style="left:${m}%" title="計画どおりなら ${m.toFixed(1)}%"></b>`}</div>`;
+  return `<div class="pbar ${cls}" role="progressbar" aria-label="${esc(label || "進捗")}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p)}"><i style="width:${p}%"></i>${m == null ? "" : `<b style="left:${m}%" title="計画どおりなら ${m.toFixed(1)}%"></b>`}</div>`;
 }
 
 export function bar(pct, cls = "") {
@@ -84,7 +84,7 @@ export function donut(segs, main, sub, id) {
     off += len; return a;
   }).join("");
   const aria = segs.map(s => `${s.label} ${tot > 0 ? (s.value / tot * 100).toFixed(1) : 0}%`).join("、");
-  return `<div class="donut"><svg viewBox="0 0 150 150" role="img" aria-label="${esc(aria)}"><defs>${defs}</defs><circle cx="75" cy="75" r="${r}" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="22"/>${arcs}</svg>
+  return `<div class="donut"><svg viewBox="0 0 150 150" role="img" aria-label="${esc(aria)}"><defs>${defs}</defs><circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--track)" stroke-width="22"/>${arcs}</svg>
   <div class="c"><strong>${esc(main)}</strong><small>${esc(sub)}</small></div></div>`;
 }
 
@@ -103,8 +103,13 @@ export function animateCounts(root) {
   });
 }
 
-export const tone = { cyan: "#25d9ef", violet: "#a78bfa", gold: "#ffc857", pink: "#f26a9d" };
-export const BIZ_COLORS = {
-  reform: { c1: "#66f3ff", c2: "#2da8f4" },
-  staffing: { c1: "#c9b8ff", c2: "#f26a9d" },
-};
+export const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+/** 意味ごとの色（テーマに合わせて、描くときに読む）。 */
+export function palette() {
+  return {
+    sales: { c1: cssVar("--c-sales2"), c2: cssVar("--c-sales") }, mat: { c1: cssVar("--c-mat2"), c2: cssVar("--c-mat") },
+    lab: { c1: cssVar("--c-lab2"), c2: cssVar("--c-lab") }, prof: { c1: cssVar("--c-prof2"), c2: cssVar("--c-prof") },
+    goal: { c1: cssVar("--c-goal2"), c2: cssVar("--c-goal") }, prev: { c1: cssVar("--c-prev"), c2: "#7a5fe0" },
+  };
+}
+export const bizColor = id => { const p = palette(); return id === "reform" ? p.sales : p.prev; };

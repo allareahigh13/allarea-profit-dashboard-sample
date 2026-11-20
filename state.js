@@ -20,6 +20,7 @@ export const state = {
   reportIdx: null,
   overrides: store.get("targets", {}),
   updatedAt: null,
+  theme: store.get("theme", "navy"),
 };
 
 export const getScope = sc => C.buildScope(state.data, sc, state.overrides);

@@ -1,7 +1,7 @@
 /* 各ページの中身。どのページも state と calc の数字だけから作る（固定の数字は書かない）。 */
 import * as C from "./calc.js";
 import { state, getScope, store } from "./state.js";
-import { esc, ICON, svgI, tag, diffTag, spark, pbar, bar, kpi, donut, fmtMan, fmtPct, BIZ_COLORS } from "./ui.js";
+import { esc, ICON, svgI, tag, diffTag, spark, pbar, bar, kpi, donut, fmtMan, fmtPct, bizColor, palette } from "./ui.js";
 import { drawChart, metricLabel } from "./chart.js";
 import { insights, bizInsights } from "./insights.js";
 
@@ -36,17 +36,17 @@ function plTabs(scope) {
 
 function plKpis(s, sm) {
   const m = sm.metrics, L = s.L, mo = s.months[L];
-  const salesCard = kpi({ tone: "cyan", icon: "coin", label: `売上（${mo}）`, value: fmtMan(m.sales.now), unit: "万円",
-    sub: `累計 ${fmtMan(m.sales.cum)}万円`, tags: trendTags(m.sales), sparkHtml: spark(lastN(s.sales, L), "#25d9ef", "a") });
-  const costCard = kpi({ tone: "violet", icon: "cost", label: `原価（${mo}）`, value: fmtMan(m.cost.now), unit: "万円",
-    sub: `売上原価率 ${fmtPct(sm.costRateNow)}（資材 ${fmtMan(m.materials.now)}／人件費 ${fmtMan(m.labor.now)}）`, tags: trendTags(m.cost, true), sparkHtml: spark(lastN(s.cost, L), "#a78bfa", "b") });
-  const goalCard = kpi({ tone: "blue", icon: "target", label: "目標に対する進捗（売上）", value: fmtPct(m.sales.progress).replace("%", ""), unit: "%",
+  const salesCard = kpi({ tone: "sky", icon: "coin", label: `売上（${mo}）`, value: fmtMan(m.sales.now), unit: "万円",
+    sub: `累計 ${fmtMan(m.sales.cum)}万円`, tags: trendTags(m.sales), sparkHtml: spark(lastN(s.sales, L), "#8ec9ff", "a") });
+  const costCard = kpi({ tone: "amber", icon: "cost", label: `原価（${mo}）`, value: fmtMan(m.cost.now), unit: "万円",
+    sub: `売上原価率 ${fmtPct(sm.costRateNow)}（資材 ${fmtMan(m.materials.now)}／人件費 ${fmtMan(m.labor.now)}）`, tags: trendTags(m.cost, true), sparkHtml: spark(lastN(s.cost, L), "#ffb066", "b") });
+  const goalCard = kpi({ tone: "gold", icon: "target", label: "目標に対する進捗（売上）", value: fmtPct(m.sales.progress).replace("%", ""), unit: "%",
     sub: `累計 ${fmtMan(m.sales.cum)} ／ 目標 ${fmtMan(m.sales.target)}万円`, tags: diffTag("計画との差", m.sales.diff),
     barHtml: pbar(m.sales.progress, m.sales.planProgress, "売上の目標進捗") });
-  const profCard = kpi({ tone: "cyan", icon: "layers", label: `累計利益（期初〜${mo}）`, value: fmtMan(m.profit.cum), unit: "万円",
+  const profCard = kpi({ tone: "teal", icon: "layers", label: `累計利益（期初〜${mo}）`, value: fmtMan(m.profit.cum), unit: "万円",
     sub: `利益率 ${fmtPct(sm.profitRate)}／利益目標の進捗 ${fmtPct(m.profit.progress)}`,
     tags: (state.showYoY ? tag("前年累計比", m.profit.cumYoyPct) : "") + diffTag("計画との差", m.profit.diff),
-    sparkHtml: spark(C.cumulative(s.profit).slice(0, L + 1), "#ffc857", "c") });
+    sparkHtml: spark(C.cumulative(s.profit).slice(0, L + 1), "#5ee6c4", "c") });
   return `<section class="kpis k5" aria-label="主要な数字">${salesCard}${costCard}${goalCard}${profCard}</section>`;
 }
 
@@ -57,10 +57,10 @@ function chartCard(s, { metricFixed = null } = {}) {
     <div class="ctl-row"><h2 class="ttl" id="chTitle">月次${lab}と累計${lab}の推移（計画との比較）</h2>${tabs}</div>
     <div class="svgwrap" id="chartWrap"><div class="tip" id="tip" role="status"></div></div>
     <div class="legend" id="legend">
-      <button type="button" data-ser="bars" aria-pressed="${state.ser.bars}"><span class="sw"><i></i><i></i></span>月次の実績（棒）</button>
+      <button type="button" data-ser="bars" aria-pressed="${state.ser.bars}">${metric === "sales" ? '<span class="sq-sw mat"></span>資材費 <span class="sq-sw lab"></span>人件費 <span class="sq-sw prof"></span>利益（月次の積み上げ棒）' : metric === "cost" ? '<span class="sq-sw mat"></span>資材費 <span class="sq-sw lab"></span>人件費（月次の積み上げ棒）' : '<span class="sq-sw prof"></span>月次の利益（棒）'}</button>
       <button type="button" data-ser="cum" aria-pressed="${state.ser.cum}"><span class="dot"></span>累計の実績（金色の線）</button>
-      <button type="button" data-ser="plan" aria-pressed="${state.ser.plan}"><span class="dotted"></span>目標の計画（水色の点線・棒の横線）</button>
-      ${state.showYoY ? `<span style="display:flex;align-items:center;gap:8px"><span class="dotted v"></span>前年（紫の点線）</span>` : ""}
+      <button type="button" data-ser="plan" aria-pressed="${state.ser.plan}"><span class="tick"></span><span class="dotted"></span>目標の計画（緑の太線＝月次／緑の点線＝累計）</button>
+      ${state.showYoY ? `<span style="display:flex;align-items:center;gap:8px"><span class="tick v"></span>前年（紫の横線＝月次／紫の実線＝累計）</span>` : ""}
     </div><p class="summary" id="summary"></p></article>`;
 }
 function postChart(post, s, metricFixed = null) {
@@ -74,17 +74,17 @@ function composeCard(scope, s, sm) {
   if (scope === "all") {
     const comp = C.composition(state.data, state.overrides), meas = state.compMeasure;
     const lab = { sales: "売上", cost: "原価", profit: "利益" }[meas], pctKey = meas + "Pct";
-    const segs = comp.parts.map(p => ({ label: p.name, value: p[meas], ...BIZ_COLORS[p.id] }));
-    const rows = comp.parts.map(p => `<div class="row-item" style="grid-template-columns:auto 1fr auto"><i style="width:10px;height:10px;border-radius:3px;background:${BIZ_COLORS[p.id].c2}"></i><div><div class="nm">${esc(p.name)}</div><div class="sub2">${lab} ${fmtMan(p[meas])}万円</div></div><div class="vl">${fmtPct(p[pctKey])}</div></div>`).join("");
+    const segs = comp.parts.map(p => ({ label: p.name, value: p[meas], ...bizColor(p.id) }));
+    const rows = comp.parts.map(p => `<div class="row-item" style="grid-template-columns:auto 1fr auto"><i style="width:10px;height:10px;border-radius:3px;background:${bizColor(p.id).c2}"></i><div><div class="nm">${esc(p.name)}</div><div class="sub2">${lab} ${fmtMan(p[meas])}万円</div></div><div class="vl">${fmtPct(p[pctKey])}</div></div>`).join("");
     return `<article class="card compose" aria-labelledby="coTitle"><div class="ctl-row"><h2 class="ttl" id="coTitle">損益構成（事業別）</h2>
       <div class="seg small" role="group" aria-label="構成の見方">${["sales", "cost", "profit"].map(k => `<button type="button" data-comp="${k}" aria-pressed="${k === meas}">${metricLabel(k)}</button>`).join("")}</div></div>
       <div class="donutbox">${donut(segs, fmtMan(comp.total[meas]), `${lab}（累計・万円）`, "co")}<div class="dleg">${rows}</div></div>
       <p class="note">期初〜${esc(s.months[s.L])}の累計です。割合は、事業の${lab}を全体の${lab}で割っています。</p></article>`;
   }
-  const m = sm.metrics, segs = [
-    { label: "資材費", value: m.materials.cum, c1: "#ffe18a", c2: "#ffc857" },
-    { label: "人件費", value: m.labor.cum, c1: "#ff91b5", c2: "#f26a9d" },
-    { label: "利益", value: Math.max(0, m.profit.cum), c1: "#66f3ff", c2: "#2da8f4" }];
+  const pl = palette(), m = sm.metrics, segs = [
+    { label: "資材費", value: m.materials.cum, ...pl.mat },
+    { label: "人件費", value: m.labor.cum, ...pl.lab },
+    { label: "利益", value: Math.max(0, m.profit.cum), ...pl.prof }];
   const rows = segs.map(x => `<div class="row-item" style="grid-template-columns:auto 1fr auto"><i style="width:10px;height:10px;border-radius:3px;background:${x.c2}"></i><div><div class="nm">${x.label}</div><div class="sub2">${fmtMan(x.value)}万円</div></div><div class="vl">${fmtPct(C.ratio(x.value, m.sales.cum))}</div></div>`).join("");
   return `<article class="card compose" aria-labelledby="coTitle"><h2 class="ttl" id="coTitle">損益構成（売上に対する割合）</h2>
     <div class="donutbox">${donut(segs, fmtMan(m.sales.cum), "売上（累計・万円）", "co")}<div class="dleg">${rows}</div></div>
@@ -92,24 +92,27 @@ function composeCard(scope, s, sm) {
 }
 
 function compareCard(s, sm) {
-  const m = sm.metrics, L = s.L;
-  const row = (name, mk, inverse) => {
-    const x = m[mk], yoy = x.cumYoy, mx = Math.max(Math.abs(x.cum), Math.abs(yoy || 0), 1);
-    return `<div class="cmp"><div class="r"><span>${name}</span><span>${fmtMan(x.cum)}万円</span></div>
-      <div class="track" role="img" aria-label="${name} 前年と比べた長さ"><i data-w="${Math.max(2, Math.abs(x.cum) / mx * 100)}"></i></div>
-      <div class="f"><span>${state.showYoY ? `前年累計 ${fmtMan(yoy)}万円` : (x.planCum != null ? `計画累計 ${fmtMan(x.planCum)}万円` : "")}</span>${state.showYoY ? `<span class="${(x.cumYoyPct ?? 0) >= 0 !== inverse ? "up" : "down"}">${fmtPct(x.cumYoyPct, { sign: true })}</span>` : ""}</div></div>`;
-  };
+  const m = sm.metrics, sales = m.sales.cum;
+  const items = [
+    { nm: "売上", c: "sky", v: "sales", x: m.sales, pct: 100, base: "売上を100%としたときの割合", inv: false },
+    { nm: "資材費（コスト）", c: "amber", v: "mat", x: m.materials, pct: C.ratio(m.materials.cum, sales), base: "売上に対する割合", inv: true },
+    { nm: "人件費（コスト）", c: "pink", v: "lab", x: m.labor, pct: C.ratio(m.labor.cum, sales), base: "売上に対する割合", inv: true },
+    { nm: "利益", c: "teal", v: "prof", x: m.profit, pct: C.ratio(m.profit.cum, sales), base: "売上に対する割合（利益率）", inv: false },
+  ];
+  const sq = v => `<i class="sq" style="background:linear-gradient(var(--c-${v}2),var(--c-${v}))"></i>`;
+  const rows = items.map(it => `<div class="cmp"><div class="r"><span class="nmc">${sq(it.v)}${it.nm}</span><span class="val"><b>${fmtMan(it.x.cum)}万円</b><span class="pc ${it.c}">${fmtPct(it.pct)}</span></span></div>
+      <div class="track" role="img" aria-label="${it.nm} ${it.base} ${fmtPct(it.pct)}"><i class="${it.c}" data-w="${Math.max(2, Math.min(100, it.pct || 0))}"></i></div>
+      <div class="f"><span>${it.base}${state.showYoY ? `・前年累計 ${fmtMan(it.x.cumYoy)}万円` : ""}</span>${state.showYoY ? `<span class="${(it.x.cumYoyPct ?? 0) >= 0 !== it.inv ? "up" : "down"}">前年比 ${fmtPct(it.x.cumYoyPct, { sign: true })}</span>` : ""}</div></div>`).join("");
   const prog = m.sales.progress;
-  return `<article class="card compare" aria-labelledby="cmTitle"><h2 class="ttl" id="cmTitle">主要指標の比較</h2><div style="display:grid;gap:12px">
-    ${row("売上", "sales", false)}${row("資材費（コスト）", "materials", true)}${row("人件費（コスト）", "labor", true)}${row("利益", "profit", false)}
-    <div class="cmp"><div class="r"><span>目標進捗（売上）</span><span>${fmtPct(prog)}</span></div>${pbar(prog, m.sales.planProgress, "売上の目標進捗")}
-      <div class="f"><span>計画どおりなら ${fmtPct(m.sales.planProgress)}</span><span class="${m.sales.diff >= 0 ? "up" : "down"}">差 ${fmtMan(m.sales.diff, { sign: true })}万円</span></div></div></div></article>`;
+  return `<article class="card compare" aria-labelledby="cmTitle"><h2 class="ttl" id="cmTitle">主要指標の比較</h2><div style="display:grid;gap:12px">${rows}
+    <div class="cmp"><div class="r"><span class="nmc">${sq("goal")}目標進捗（売上）</span><span class="val"><b>${fmtMan(sales)}万円</b><span class="pc gold">${fmtPct(prog)}</span></span></div>${pbar(prog, m.sales.planProgress, "売上の目標進捗", "gold")}
+      <div class="f"><span>目標 ${fmtMan(m.sales.target)}万円・計画どおりなら ${fmtPct(m.sales.planProgress)}</span><span class="${m.sales.diff >= 0 ? "up" : "down"}">計画との差 ${fmtMan(m.sales.diff, { sign: true })}万円</span></div></div></div></article>`;
 }
 
 function costCard(s, sm) {
   const m = sm.metrics, planCr = s.target.cost / s.target.sales * 100;
   const items = sm.costBreakdown.map(c => `<div class="cost-item"><div class="top"><span>${c.name}</span><span class="amt">${fmtMan(c.amount)}<small style="font-size:13px;font-weight:500"> 万円</small></span></div>
-    ${bar(c.ofCost, c.key === "materials" ? "gold" : "pink")}
+    ${bar(c.ofCost, c.key === "materials" ? "amber" : "pink")}
     <div class="meta"><span>原価に占める割合 <b>${fmtPct(c.ofCost)}</b></span><span>売上に対する割合 <b>${fmtPct(c.ofSales)}</b></span>${state.showYoY ? tag("前年比", c.yoyPct, false) : ""}</div></div>`).join("");
   return `<article class="card panel" aria-labelledby="ccTitle"><h2 class="ttl" id="ccTitle">原価の内訳（資材費・人件費）</h2>
     <div class="cost-item"><div class="top"><span>原価の合計</span><span class="amt">${fmtMan(m.cost.cum)}<small style="font-size:13px;font-weight:500"> 万円</small></span></div>
@@ -143,10 +146,10 @@ export function renderPL(route, post) {
 export function renderHome(route, post) {
   const s = getScope("all"), sm = C.summarize(s), m = sm.metrics, mo = s.months[sm.L];
   const cards = [
-    kpi({ tone: "cyan", icon: "coin", label: `売上（${mo}）`, value: fmtMan(m.sales.now), unit: "万円", sub: `累計 ${fmtMan(m.sales.cum)}万円`, tags: trendTags(m.sales), sparkHtml: spark(lastN(s.sales, sm.L), "#25d9ef", "h1"), href: "#/sales" }),
-    kpi({ tone: "violet", icon: "cost", label: `原価（${mo}）`, value: fmtMan(m.cost.now), unit: "万円", sub: `売上原価率 ${fmtPct(sm.costRateNow)}`, tags: trendTags(m.cost, true), href: "#/pl" }),
-    kpi({ tone: "blue", icon: "target", label: "売上の目標進捗", value: fmtPct(m.sales.progress).replace("%", ""), unit: "%", sub: `目標 ${fmtMan(m.sales.target)}万円`, tags: diffTag("計画との差", m.sales.diff), barHtml: pbar(m.sales.progress, m.sales.planProgress, "売上の目標進捗"), href: "#/goals" }),
-    kpi({ tone: "cyan", icon: "layers", label: "累計利益", value: fmtMan(m.profit.cum), unit: "万円", sub: `利益率 ${fmtPct(sm.profitRate)}`, tags: state.showYoY ? tag("前年累計比", m.profit.cumYoyPct) : "", href: "#/pl" }),
+    kpi({ tone: "sky", icon: "coin", label: `売上（${mo}）`, value: fmtMan(m.sales.now), unit: "万円", sub: `累計 ${fmtMan(m.sales.cum)}万円`, tags: trendTags(m.sales), sparkHtml: spark(lastN(s.sales, sm.L), "#25d9ef", "h1"), href: "#/sales" }),
+    kpi({ tone: "amber", icon: "cost", label: `原価（${mo}）`, value: fmtMan(m.cost.now), unit: "万円", sub: `売上原価率 ${fmtPct(sm.costRateNow)}`, tags: trendTags(m.cost, true), href: "#/pl" }),
+    kpi({ tone: "gold", icon: "target", label: "売上の目標進捗", value: fmtPct(m.sales.progress).replace("%", ""), unit: "%", sub: `目標 ${fmtMan(m.sales.target)}万円`, tags: diffTag("計画との差", m.sales.diff), barHtml: pbar(m.sales.progress, m.sales.planProgress, "売上の目標進捗"), href: "#/goals" }),
+    kpi({ tone: "teal", icon: "layers", label: "累計利益", value: fmtMan(m.profit.cum), unit: "万円", sub: `利益率 ${fmtPct(sm.profitRate)}`, tags: state.showYoY ? tag("前年累計比", m.profit.cumYoyPct) : "", href: "#/pl" }),
   ].join("");
   const bizCards = state.data.businesses.map(b => {
     const bs = getScope(b.id), bm = C.summarize(bs).metrics;
@@ -175,9 +178,9 @@ export function renderSales(route, post) {
   const comp = C.composition(state.data, state.overrides);
   const top = [...comp.parts].sort((a, b) => b.salesPct - a.salesPct)[0];
   const kpis = [
-    kpi({ tone: "cyan", icon: "coin", label: `売上（${mo}）`, value: fmtMan(m.sales.now), unit: "万円", sub: `前月 ${fmtMan(m.sales.mom)}万円／前年同月 ${fmtMan(m.sales.yoy)}万円`, tags: trendTags(m.sales), sparkHtml: spark(lastN(s.sales, L), "#25d9ef", "s1") }),
-    kpi({ tone: "blue", icon: "layers", label: `累計売上（期初〜${mo}）`, value: fmtMan(m.sales.cum), unit: "万円", sub: `前年の同じ時期 ${fmtMan(m.sales.cumYoy)}万円`, tags: state.showYoY ? tag("前年比", m.sales.cumYoyPct) : "" }),
-    kpi({ tone: "violet", icon: "target", label: "売上の目標進捗", value: fmtPct(m.sales.progress).replace("%", ""), unit: "%", sub: `目標 ${fmtMan(m.sales.target)}万円`, tags: diffTag("計画との差", m.sales.diff), barHtml: pbar(m.sales.progress, m.sales.planProgress, "売上の目標進捗") }),
+    kpi({ tone: "sky", icon: "coin", label: `売上（${mo}）`, value: fmtMan(m.sales.now), unit: "万円", sub: `前月 ${fmtMan(m.sales.mom)}万円／前年同月 ${fmtMan(m.sales.yoy)}万円`, tags: trendTags(m.sales), sparkHtml: spark(lastN(s.sales, L), "#25d9ef", "s1") }),
+    kpi({ tone: "sky", icon: "layers", label: `累計売上（期初〜${mo}）`, value: fmtMan(m.sales.cum), unit: "万円", sub: `前年の同じ時期 ${fmtMan(m.sales.cumYoy)}万円`, tags: state.showYoY ? tag("前年比", m.sales.cumYoyPct) : "" }),
+    kpi({ tone: "gold", icon: "target", label: "売上の目標進捗", value: fmtPct(m.sales.progress).replace("%", ""), unit: "%", sub: `目標 ${fmtMan(m.sales.target)}万円`, tags: diffTag("計画との差", m.sales.diff), barHtml: pbar(m.sales.progress, m.sales.planProgress, "売上の目標進捗") }),
     kpi({ tone: "cyan", icon: "reform", label: "売上の最も大きい事業", value: fmtPct(top.salesPct).replace("%", ""), unit: "%", sub: `${esc(top.name)}（${fmtMan(top.sales)}万円）` }),
   ].join("");
   // 月ごとの表
@@ -332,6 +335,7 @@ export function headHtml(r) {
     <button type="button" class="chip-toggle" data-toggle="mom" aria-pressed="${state.showMoM}"><span class="box"></span>前月比</button>
     <button type="button" class="chip-toggle" data-toggle="yoy" aria-pressed="${state.showYoY}"><span class="box"></span>前年比</button></div></div>`;
   if (c.includes("mode")) controls += `<div class="ctl"><span id="lblMode" style="display:block;font-size:11px;color:var(--text-muted);margin:0 0 4px 2px">表示</span><div class="seg" role="group" aria-labelledby="lblMode" id="seg">${[["both", "月次＋累計"], ["monthly", "月次のみ"], ["cum", "累計のみ"]].map(([k, t]) => `<button type="button" data-mode="${k}" aria-pressed="${state.mode === k}">${t}</button>`).join("")}</div></div>`;
+  controls += `<div class="ctl"><span style="display:block;font-size:11px;color:var(--text-muted);margin:0 0 4px 2px">色味</span><div class="theme-switch" role="group" aria-label="色味">${[["navy", "ネイビー"], ["violet", "バイオレット"], ["forest", "フォレスト"], ["light", "ライト"]].map(([k, t]) => `<button type="button" data-theme="${k}" aria-pressed="${state.theme === k}" aria-label="${t}" title="${t}"></button>`).join("")}</div></div>`;
   let tools = "";
   if (c.includes("refresh")) tools += `<button class="btn" id="btnRefresh" type="button">データ更新</button>`;
   if (c.includes("csv")) tools += `<button class="btn" id="btnCsv" type="button">CSV出力</button>`;

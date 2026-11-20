@@ -141,6 +141,13 @@ export function summarize(s) {
   return out;
 }
 
+/** ある月の売上の内訳（資材費・人件費・利益）。実績がまだ無い月は null。合計は必ず売上と一致する。 */
+export function breakdownAt(s, i) {
+  if (!isNum(s.sales[i]) || !isNum(s.materials[i]) || !isNum(s.labor[i])) return null;
+  const sales = s.sales[i], materials = s.materials[i], labor = s.labor[i];
+  return { sales, materials, labor, profit: sales - materials - labor };
+}
+
 /** 事業ごとの構成（全体に対する売上・原価・利益の金額と％）。 */
 export function composition(data, overrides) {
   const parts = data.businesses.map(b => {

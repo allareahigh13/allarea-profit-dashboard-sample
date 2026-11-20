@@ -43,6 +43,9 @@ function drawDots() {
   }
 }
 
+/* ---------- 色味 ---------- */
+function applyTheme() { document.documentElement.dataset.theme = ["navy", "violet", "forest", "light"].includes(state.theme) ? state.theme : "navy"; setTimeout(drawDots, 0); }
+
 /* ---------- 描き直し ---------- */
 function currentRoute() {
   const h = location.hash.replace(/^#\/?/, "");
@@ -66,6 +69,7 @@ function render(keepScroll = true) {
 document.addEventListener("click", e => {
   const t = e.target.closest("button, a");
   if (!t) return;
+  if (t.dataset.theme) { state.theme = t.dataset.theme; store.set("theme", state.theme); applyTheme(); render(); return; }
   if (t.dataset.toggle) { const k = t.dataset.toggle === "mom" ? "showMoM" : "showYoY"; state[k] = !state[k]; store.set(k, state[k]); render(); return; }
   if (t.dataset.mode) { state.mode = t.dataset.mode; render(); return; }
   if (t.dataset.metric) { state.metric = t.dataset.metric; render(); return; }
@@ -115,6 +119,6 @@ function download() {
 addEventListener("hashchange", () => { render(false); $("#main").focus({ preventScroll: true }); });
 let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { drawDots(); render(); }, 150); });
 
-buildRail(); drawDots();
+applyTheme(); buildRail(); drawDots();
 if (!location.hash) history.replaceState(null, "", "#/pl");
 load().then(ok => ok && render(false));

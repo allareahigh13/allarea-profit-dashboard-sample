@@ -115,3 +115,14 @@ test("表示の整形（符号・小数・欠けた値）", () => {
   assert.equal(C.fmtMan(null), "—");
   assert.equal(C.fmtPct(12.34, { sign: true }), "+12.3%");
 });
+
+test("月ごとの内訳：資材費＋人件費＋利益＝売上（全範囲・実績のある月すべて）、実績の無い月は null", () => {
+  for (const sc of C.SCOPES) {
+    const s = C.buildScope(data, sc);
+    for (let i = 0; i < 12; i++) {
+      const b = C.breakdownAt(s, i);
+      if (i <= s.L) { near(b.materials + b.labor + b.profit, b.sales); near(b.profit, s.profit[i]); }
+      else assert.equal(b, null);
+    }
+  }
+});
