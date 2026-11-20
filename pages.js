@@ -38,16 +38,16 @@ function plTabs(scope) {
 function plKpis(s, sm) {
   const m = sm.metrics, L = s.L, mo = s.months[L];
   const salesCard = kpi({ tone: "sky", icon: "coin", label: `売上（${mo}）`, value: fmtMan(m.sales.now), unit: "万円",
-    sub: `累計 ${fmtMan(m.sales.cum)}万円`, tags: trendTags(m.sales), sparkHtml: spark(lastN(s.sales, L), "#8ec9ff", "a") });
+    sub: `累計 ${fmtMan(m.sales.cum)}万円`, tags: trendTags(m.sales), sparkHtml: spark(lastN(s.sales, L), "#7fd8ff", "a") });
   const costCard = kpi({ tone: "amber", icon: "cost", label: `原価（${mo}）`, value: fmtMan(m.cost.now), unit: "万円",
-    sub: `売上原価率 ${fmtPct(sm.costRateNow)}（資材 ${fmtMan(m.materials.now)}／人件費 ${fmtMan(m.labor.now)}）`, tags: trendTags(m.cost, true), sparkHtml: spark(lastN(s.cost, L), "#ffb066", "b") });
+    sub: `売上原価率 ${fmtPct(sm.costRateNow)}（資材 ${fmtMan(m.materials.now)}／人件費 ${fmtMan(m.labor.now)}）`, tags: trendTags(m.cost, true), sparkHtml: spark(lastN(s.cost, L), "#ffd23f", "b") });
   const goalCard = kpi({ tone: "gold", icon: "target", label: "目標に対する進捗（売上）", value: fmtPct(m.sales.progress).replace("%", ""), unit: "%",
     sub: `累計 ${fmtMan(m.sales.cum)} ／ 目標 ${fmtMan(m.sales.target)}万円`, tags: diffTag("計画との差", m.sales.diff),
     barHtml: pbar(m.sales.progress, m.sales.planProgress, "売上の目標進捗") });
   const profCard = kpi({ tone: "teal", icon: "layers", label: `累計利益（期初〜${mo}）`, value: fmtMan(m.profit.cum), unit: "万円",
     sub: `利益率 ${fmtPct(sm.profitRate)}／利益目標の進捗 ${fmtPct(m.profit.progress)}`,
     tags: (state.showYoY ? tag("前年累計比", m.profit.cumYoyPct) : "") + diffTag("計画との差", m.profit.diff),
-    sparkHtml: spark(C.cumulative(s.profit).slice(0, L + 1), "#5ee6c4", "c") });
+    sparkHtml: spark(C.cumulative(s.profit).slice(0, L + 1), "#35d6ff", "c") });
   return `<section class="kpis k5" aria-label="主要な数字">${salesCard}${costCard}${goalCard}${profCard}</section>`;
 }
 
@@ -58,7 +58,7 @@ function chartCard(s, { metricFixed = null } = {}) {
     <div class="ctl-row"><h2 class="ttl" id="chTitle">月次${lab}と累計${lab}の推移（計画との比較）</h2>${tabs}</div>
     <div class="svgwrap" id="chartWrap"><div class="tip" id="tip" role="status"></div></div>
     <div class="legend" id="legend">
-      <button type="button" data-ser="bars" aria-pressed="${state.ser.bars}">${metric === "sales" ? '<span class="sq-sw mat"></span>資材費 <span class="sq-sw lab"></span>人件費 <span class="sq-sw prof"></span>利益（月次の積み上げ棒）' : metric === "cost" ? '<span class="sq-sw mat"></span>資材費 <span class="sq-sw lab"></span>人件費（月次の積み上げ棒）' : '<span class="sq-sw prof"></span>月次の利益（棒）'}</button>
+      <button type="button" data-ser="bars" aria-pressed="${state.ser.bars}">${metric === "sales" ? '<span class="sq-sw mat"></span>資材費（黄） <span class="sq-sw lab"></span>人件費（赤） <span class="sq-sw prof"></span>利益（水色）<span class="frame-sw"></span>棒全体の枠（月次の積み上げ棒）' : metric === "cost" ? '<span class="sq-sw mat"></span>資材費 <span class="sq-sw lab"></span>人件費（月次の積み上げ棒）' : '<span class="sq-sw prof"></span>月次の利益（棒）'}</button>
       <button type="button" data-ser="cum" aria-pressed="${state.ser.cum}"><span class="dot"></span>累計の実績（金色の線）</button>
       <button type="button" data-ser="plan" aria-pressed="${state.ser.plan}"><span class="tick"></span><span class="dotted"></span>目標の計画（緑の太線＝月次／緑の点線＝累計）</button>
       ${state.showYoY ? `<span style="display:flex;align-items:center;gap:8px"><span class="tick v"></span>前年（紫の横線＝月次／紫の実線＝累計）</span>` : ""}

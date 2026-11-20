@@ -25,7 +25,7 @@ export function drawChart(wrap, s, o) {
   const col = {
     axis: T("--axis"), grid: T("--grid"), zero: T("--zero"), bubble: T("--bubble-bg"), label: T("--label"), bg: T("--background"),
     mat: [T("--c-mat2"), T("--c-mat")], lab: [T("--c-lab2"), T("--c-lab")], prof: [T("--c-prof2"), T("--c-prof")], sales: [T("--c-sales2"), T("--c-sales")],
-    plan: T("--c-plan"), prev: T("--c-prev"), gold: T("--gold"), goldL: T("--gold-light"), up: T("--up"), down: T("--down"), cyan: T("--cyan-light"),
+    plan: T("--c-plan"), prev: T("--c-prev"), frame: T("--c-frame"), gold: T("--gold"), goldL: T("--gold-light"), up: T("--up"), down: T("--down"), cyan: T("--cyan-light"),
   };
   const light = document.documentElement.dataset.theme === "light";
   const key = o.metric, L = s.L, N = 12, label = METRIC_LABEL[key];
@@ -119,6 +119,10 @@ export function drawChart(wrap, s, o) {
           }
         });
         el("rect", { x: x0 + 3, y: yTop, width: bw - 6, height: 2, rx: 1, fill: "rgba(255,255,255,.55)" }, bar);
+        // ガラスのつや（左の細い光の帯）
+        el("rect", { x: x0 + bw * 0.14, y: yTop + 2, width: Math.max(2, bw * 0.16), height: Math.max(0, y0 - yTop - 4), rx: 2, fill: "rgba(255,255,255,.17)" }, bar);
+        // 棒全体を、1つの薄い黄緑のネオンの枠で囲む（区分ごとには囲まない）
+        el("rect", { x: x0 - 0.8, y: Math.min(yTop, y0) - 0.8, width: bw + 1.6, height: Math.max(2, Math.abs(y0 - yTop)) + 1.6, rx: 6.5, fill: "none", stroke: col.frame, "stroke-width": 1.3, opacity: .8, style: `filter:drop-shadow(0 0 3px ${col.frame})` }, g);
         // 利益がマイナスのとき：0 より下へピンクで出す
         const negSeg = segs.find(x => x[1] < 0);
         if (negSeg) { const yb = yM(0), yt = yM(negSeg[1]); el("rect", { x: x0, y: yb, width: bw, height: Math.max(2, yt - yb), rx: 5, fill: "url(#gNeg)", filter: "url(#glow)" }, g); }

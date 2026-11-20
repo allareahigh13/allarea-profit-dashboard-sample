@@ -197,3 +197,82 @@ test("見積日から売上月の名前を作る", () => {
   assert.equal(C.monthLabelOf(""), null);
   assert.equal(C.monthLabelOf(undefined), null);
 });
+
+const TPL = [{ name: "クロス張替", unit: "㎡", price: 1200 }, { name: "ユニットバス交換", unit: "式", price: 680000 }, { name: "トイレ交換", unit: "式", price: 180000 }];
+
+test("商談の叩き台：要望・予算・日程・結果の見込み・見積の候補を拾う（規則による。AIではない）", () => {
+  const text = "お風呂を新しくしたいです。リビングのクロスを張り替えたい、40㎡くらいです。予算は250万円くらいで考えています。工期は年明けからお願いします。ではそれでお願いします。";
+  const r = C.extractMeeting(text, TPL);
+  assert.ok(r.requests.length >= 2);
+  assert.equal(r.budget, 2500000);
+  assert.ok(r.schedule.some(s => s.includes("年明け")));
+  assert.equal(r.resultGuess, "合意");
+  const names = r.lines.map(l => l.name);
+  assert.ok(names.includes("ユニットバス交換") && names.includes("クロス張替"));
+  const cloth = r.lines.find(l => l.name === "クロス張替");
+  assert.equal(cloth.qty, 40); assert.equal(cloth.unit, "㎡"); assert.equal(cloth.price, 1200);
+});
+
+test("商談の叩き台：見送りは「不成立」、どちらでもなければ「検討中」、空は空", () => {
+  assert.equal(C.extractMeeting("検討の結果、今回は見送りにします。", TPL).resultGuess, "不成立");
+  assert.equal(C.extractMeeting("もう少し考えさせてください。", TPL).resultGuess, "検討中");
+  const e = C.extractMeeting("", TPL);
+  assert.deepEqual([e.requests, e.lines, e.budget, e.resultGuess], [[], [], null, "検討中"]);
+  assert.equal(C.extractMeeting("予算は5000円です", TPL).budget, null);   // 5桁未満の「円」は予算として拾わない
+});
+
+test("職人の依頼：了承は工程表の日程を書き換え、依頼中は確認待ちの印を付ける（元のデータは変えない）", () => {
+  const cases = [{ id: "X1", tasks: [{ name: "a", start: "2026-12-01", end: "2026-12-03", done: 0 }, { name: "b", start: "2026-12-04", end: "2026-12-05", done: 0 }] }];
+  const ds = [{ id: "d1", caseId: "X1", taskIdx: 0, craftsman: "職人A", start: "2026-12-24", end: "2026-12-26", status: "了承" },
+              { id: "d2", caseId: "X1", taskIdx: 1, craftsman: "職人B", start: "2026-12-27", end: "2026-12-28", status: "依頼中" }];
+  const out = C.applyDispatches(cases, ds);
+  assert.equal(out[0].tasks[0].start, "2026-12-24"); assert.equal(out[0].tasks[0].end, "2026-12-26"); assert.equal(out[0].tasks[0].confirmed, true);
+  assert.equal(out[0].tasks[1].start, "2026-12-04");               // 依頼中は日程を変えない
+  assert.equal(out[0].tasks[1].pending.craftsman, "職人B");
+  assert.equal(cases[0].tasks[0].start, "2026-12-01");              // 元は変わらない
+  assert.equal(C.applyDispatches(cases, [])[0], cases[0]);
+});
+
+test("現場のいま：何をしているか・どこまで進んだか・次は何か", () => {
+  const tasks = [{ name: "a", start: "2026-12-01", end: "2026-12-03", done: 100 }, { name: "b", start: "2026-12-04", end: "2026-12-10", done: 40 }, { name: "c", start: "2026-12-11", end: "2026-12-12", done: 0 }];
+  const n = C.siteNow(tasks, "2026-12-06");
+  assert.deepEqual(n.doing.map(t => t.name), ["b"]); assert.equal(n.next.name, "c"); assert.equal(n.lastDone.name, "a"); assert.equal(n.doneCount, 1);
+  assert.equal(C.siteNow([], "2026-12-06"), null);
+});
+
+test("アラート：遅れ・日報・職人の確認・相談・追加変更の承認・着工前・契約書を拾い、重い順に並べる", () => {
+  const asOf = "2026-12-18";
+  const mk = o => ({ id: "A", name: "試験邸", status: "進行中", stage: 3, contractType: "直接", contractDoc: "締結済", checklist: { neighborhood: true, materials: true, craftsmen: true, curing: true }, tasks: [], ...o });
+  const lateTask = { name: "解体", start: "2026-12-01", end: "2026-12-10", done: 50 };
+  const slowTask = { name: "下地", start: "2026-12-10", end: "2026-12-19", done: 10 };
+  const a = C.buildAlerts({ cases: [mk({ tasks: [lateTask, slowTask] })], asOf, reports: [{ caseId: "A", date: "2026-12-18" }] });
+  assert.deepEqual(a.map(x => [x.kind, x.level]), [["遅れ", "高"], ["遅れ", "中"]]);
+  // 日報なし（施工中）
+  assert.equal(C.buildAlerts({ cases: [mk()], asOf }).find(x => x.kind === "日報").level, "高");
+  assert.equal(C.buildAlerts({ cases: [mk()], asOf, reports: [{ caseId: "A", date: "2026-12-17" }] }).find(x => x.kind === "日報").level, "中");
+  assert.equal(C.buildAlerts({ cases: [mk()], asOf, reports: [{ caseId: "A", date: "2026-12-18" }] }).length, 0);
+  // 追加・変更工事の承認待ち
+  const rc = [{ caseId: "A", date: "2026-12-18", change: { flag: true, text: "壁の補修を追加", approval: "未承認" } }];
+  assert.equal(C.buildAlerts({ cases: [mk()], asOf, reports: rc }).find(x => x.kind === "追加・変更").level, "高");
+  rc[0].change.approval = "承認済"; assert.equal(C.buildAlerts({ cases: [mk()], asOf, reports: rc }).length, 0);
+  // 着工前の準備
+  const pre = mk({ status: "受注", stage: 2, checklist: { neighborhood: false, materials: true, craftsmen: false, curing: true }, tasks: [{ name: "a", start: "2026-12-20", end: "2026-12-22", done: 0 }] });
+  const p = C.buildAlerts({ cases: [pre], asOf }).find(x => x.kind === "着工前");
+  assert.equal(p.level, "高"); assert.ok(p.detail.includes("近隣挨拶") && p.detail.includes("職人の手配"));
+  assert.equal(C.buildAlerts({ cases: [{ ...pre, tasks: [{ name: "a", start: "2027-02-01", end: "2027-02-03", done: 0 }] }], asOf }).filter(x => x.kind === "着工前").length, 0);
+  // 契約書・発注書
+  assert.ok(C.buildAlerts({ cases: [mk({ status: "受注", stage: 2, contractDoc: "未" })], asOf }).some(x => x.kind === "契約" && x.title.includes("契約書")));
+  assert.ok(C.buildAlerts({ cases: [mk({ status: "受注", stage: 2, contractDoc: "未", contractType: "元請け経由" })], asOf }).some(x => x.title.includes("発注書")));
+  // 見積の返事待ち
+  assert.ok(C.buildAlerts({ cases: [mk({ status: "見積り中", stage: 1, quotedOn: "2026-12-01" })], asOf }).some(x => x.kind === "見積"));
+  assert.ok(!C.buildAlerts({ cases: [mk({ status: "見積り中", stage: 1, quotedOn: "2026-12-10" })], asOf }).some(x => x.kind === "見積"));
+  // 職人の確認待ち・相談
+  const withTask = mk({ tasks: [{ name: "a", start: "2026-12-24", end: "2026-12-26", done: 0 }] });
+  const ds = [{ id: "d1", caseId: "A", taskIdx: 0, craftsman: "職人A", start: "2026-12-24", end: "2026-12-26", status: "依頼中", sentOn: "2026-12-13" },
+              { id: "d2", caseId: "A", taskIdx: 0, craftsman: "職人B", start: "2026-12-24", end: "2026-12-26", status: "相談", sentOn: "2026-12-17", memo: "別の現場と重なる" }];
+  const al = C.buildAlerts({ cases: [withTask], dispatches: ds, reports: [{ caseId: "A", date: "2026-12-18" }], asOf });
+  assert.equal(al.find(x => x.kind === "職人の確認").level, "高");     // 5日待ち
+  assert.equal(al.find(x => x.kind === "職人の相談").level, "高");
+  assert.deepEqual(al.map(x => x.level), [...al.map(x => x.level)].sort((p, q) => C.LEVEL_ORDER[p] - C.LEVEL_ORDER[q]));
+  assert.equal(new Set(al.map(x => x.id)).size, al.length);              // id は重ならない
+});

@@ -281,3 +281,100 @@ export function monthLabelOf(dateStr) {
   const n = Number(m[2]);
   return n >= 1 && n <= 12 ? n + "月" : null;
 }
+
+/* ===================== アラート・商談記録の叩き台・職人の了承 ===================== */
+export const LEVEL_ORDER = { "高": 0, "中": 1, "低": 2 };
+
+/** 現場の「いま」：何をしているか・どこまで進んだか・次は何か。 */
+export function siteNow(tasks, asOf) {
+  if (!tasks.length) return null;
+  const doing = tasks.filter(t => t.done < 100 && parseDate(asOf) >= parseDate(t.start));
+  const next = tasks.find(t => t.done < 100 && parseDate(asOf) < parseDate(t.start));
+  const finished = tasks.filter(t => t.done >= 100);
+  return { doing, next: next || null, lastDone: finished.length ? finished[finished.length - 1] : null, doneCount: finished.length, total: tasks.length };
+}
+
+/** 抜け漏れ・遅れのアラート。入力：{ cases, dispatches, reports, asOf }。各アラートは決まった id を持つ（確認済みにできる）。 */
+export function buildAlerts({ cases, dispatches = [], reports = [], asOf }) {
+  const out = [], add = a => out.push(a);
+  const days = d => dayDiff(d, asOf);
+  for (const c of cases) {
+    const active = c.status === "受注" || c.status === "進行中";
+    if (active && c.tasks.length) {
+      c.tasks.forEach((t, i) => {
+        const st = taskState(t, asOf);
+        if (st === "遅れ") add({ id: `late:${c.id}:${i}`, level: "高", kind: "遅れ", caseId: c.id, title: `工程の遅れ：${t.name}`, detail: `${c.name}。終了予定の ${t.end} を過ぎていますが、進み具合は ${Math.round(t.done)}% です。`, action: "工程表で、遅れの理由と新しい日程を確認する" });
+        else if (st === "遅れ気味") add({ id: `slow:${c.id}:${i}`, level: "中", kind: "遅れ", caseId: c.id, title: `工程が遅れ気味：${t.name}`, detail: `${c.name}。計画どおりなら ${Math.round(expectedProgress(t, asOf))}% のところ、${Math.round(t.done)}% です。`, action: "職人に状況を確認する" });
+      });
+    }
+    if (c.status === "進行中" && c.stage === 3) {   // 施工中は、毎日の日報が要る
+      const mine = reports.filter(r => r.caseId === c.id).map(r => r.date).sort();
+      const last = mine.length ? mine[mine.length - 1] : null, gap = last ? days(last) : null;
+      if (last === null) add({ id: `rep:${c.id}`, level: "高", kind: "日報", caseId: c.id, title: "日報が1件もありません", detail: `${c.name}。施工中ですが、日報の記録がありません。`, action: "現場の担当者に、日報と写真を上げてもらう" });
+      else if (gap >= 3) add({ id: `rep:${c.id}`, level: "高", kind: "日報", caseId: c.id, title: `日報が ${gap}日 止まっています`, detail: `${c.name}。最後の日報は ${last} です。`, action: "現場の状況を確認する" });
+      else if (gap >= 1) add({ id: `rep:${c.id}`, level: "中", kind: "日報", caseId: c.id, title: "今日の日報がまだです", detail: `${c.name}。最後の日報は ${last} です。`, action: "今日の日報と写真を上げてもらう" });
+    }
+    const pendingChange = reports.filter(r => r.caseId === c.id && r.change && r.change.flag && r.change.approval === "未承認");
+    if (pendingChange.length) add({ id: `chg:${c.id}`, level: "高", kind: "追加・変更", caseId: c.id, title: `追加・変更工事の承認待ち（${pendingChange.length}件）`, detail: `${c.name}。${pendingChange[0].change.text || "内容は日報を確認"}`, action: "費用と工期への影響を、お客様に提示して承認をもらう" });
+    if (active && c.tasks.length) {
+      const start = c.tasks.map(t => t.start).sort()[0], untilStart = dayDiff(asOf, start), cl = c.checklist || {};
+      const labels = { neighborhood: "近隣挨拶", materials: "資材の手配", craftsmen: "職人の手配", curing: "養生の準備" };
+      const missing = Object.keys(labels).filter(k => c.checklist && !cl[k]).map(k => labels[k]);
+      if (untilStart >= 0 && untilStart <= 7 && missing.length) add({ id: `prep:${c.id}`, level: untilStart <= 3 ? "高" : "中", kind: "着工前", caseId: c.id, title: `着工まで ${untilStart}日：準備が終わっていません`, detail: `${c.name}。未完了：${missing.join("、")}。`, action: "着工前の準備を終わらせる" });
+    }
+    if (active && (c.contractDoc || "未") === "未") add({ id: `doc:${c.id}`, level: "中", kind: "契約", caseId: c.id, title: `${c.contractType === "元請け経由" ? "発注書" : "契約書"}がまだです`, detail: `${c.name}。受注の状態ですが、${c.contractType === "元請け経由" ? "発注書の受領" : "契約書の締結"}が記録されていません。`, action: "書類をそろえ、案件に記録する" });
+    if (c.status === "見積り中" && c.quotedOn && days(c.quotedOn) >= 14) add({ id: `quote:${c.id}`, level: "低", kind: "見積", caseId: c.id, title: `見積の返事待ちが ${days(c.quotedOn)}日`, detail: `${c.name}。見積の提出日は ${c.quotedOn} です。`, action: "お客様に、結果の確認の連絡をする" });
+  }
+  for (const d of dispatches) {
+    const c = cases.find(x => x.id === d.caseId); if (!c) continue;
+    const t = c.tasks[d.taskIdx];
+    if (d.status === "相談") add({ id: `consult:${d.id}`, level: "高", kind: "職人の相談", caseId: c.id, title: `職人から「代表に相談」：${d.craftsman}`, detail: `${c.name}の「${t ? t.name : ""}」（候補 ${d.start}〜${d.end}）。都合がつかないとの連絡です。${d.memo ? "ひと言：" + d.memo : ""}`, action: "別の日程を決め、もう一度依頼する" });
+    if (d.status === "依頼中") { const w = days(d.sentOn); if (w >= 2) add({ id: `wait:${d.id}`, level: w >= 4 ? "高" : "中", kind: "職人の確認", caseId: c.id, title: `職人の確認待ちが ${w}日：${d.craftsman}`, detail: `${c.name}の「${t ? t.name : ""}」（候補 ${d.start}〜${d.end}）。依頼日は ${d.sentOn} です。`, action: "職人に、確認ボタンを押すよう連絡する" }); }
+  }
+  return out.sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level] || a.caseId.localeCompare(b.caseId));
+}
+
+/** 商談の記録（文字起こしやメモ）から、叩き台を作る。AI ではなく、決まった言葉の規則で拾う（音声の解析は未接続）。 */
+const MEETING_RULES = {
+  requests: ["したい", "希望", "お願い", "ほしい", "欲しい", "変えたい", "交換", "張替", "張り替え", "直したい", "気になる", "困って"],
+  budget: ["予算", "万円", "円まで", "円くらい", "円以内"],
+  schedule: ["いつ", "までに", "着工", "工期", "完了", "引っ越し", "来月", "今月", "年内", "年明け"],
+  agree: ["お願いします", "進めてください", "進めて", "決めました", "決定", "それでいきます", "合意", "契約します"],
+  decline: ["見送り", "やめます", "他社", "検討の結果", "高すぎ", "今回は"],
+};
+const ITEM_RULES = [["ユニットバス交換", /ユニットバス|お風呂|浴室|バス/], ["システムキッチン交換", /キッチン|台所/], ["トイレ交換", /トイレ|便器/], ["フローリング張替", /フローリング|床/], ["クロス張替", /クロス|壁紙/], ["解体・撤去工事", /解体|撤去/], ["電気工事", /電気|コンセント|照明/], ["給排水工事", /給排水|水道|配管/]];
+export function extractMeeting(text, templates = []) {
+  const sentences = String(text || "").split(/[。\n!！?？]+/).map(s => s.trim()).filter(Boolean);
+  const has = (s, ws) => ws.some(w => s.includes(w));
+  const requests = sentences.filter(s => has(s, MEETING_RULES.requests)), schedule = sentences.filter(s => has(s, MEETING_RULES.schedule));
+  const agree = sentences.filter(s => has(s, MEETING_RULES.agree)), decline = sentences.filter(s => has(s, MEETING_RULES.decline));
+  let budget = null;
+  for (const s of sentences.filter(x => has(x, MEETING_RULES.budget))) {
+    const m = /([\d,.]+)\s*万円/.exec(s) || null, y = /([\d,]{5,})\s*円/.exec(s) || null;
+    if (m) budget = Math.round(parseFloat(m[1].replace(/,/g, "")) * 10000); else if (y) budget = parseInt(y[1].replace(/,/g, ""), 10);
+    if (budget) break;
+  }
+  const lines = [];
+  for (const [name, re] of ITEM_RULES) {
+    if (!re.test(text || "")) continue;
+    const tpl = templates.find(t => t.name === name), area = new RegExp(String.raw`(?:${re.source})[^。\n]{0,12}?([\d.]+)\s*(?:㎡|平米|m2)`).exec(text || "");
+    lines.push({ name, qty: tpl && tpl.unit === "㎡" ? (area ? parseFloat(area[1]) : 1) : 1, unit: tpl ? tpl.unit : "式", price: tpl ? tpl.price : 0, cost: "" });
+  }
+  const result = decline.length && !agree.length ? "不成立" : agree.length && !decline.length ? "合意" : "検討中";
+  return { requests, schedule, decisions: agree, declines: decline, budget, lines, resultGuess: result };
+}
+
+/** 職人の依頼を、工程表に反映する（了承なら日程を確定、依頼中なら「確認待ち」の印）。元の配列は変えない。 */
+export function applyDispatches(cases, dispatches) {
+  return cases.map(c => {
+    const mine = dispatches.filter(d => d.caseId === c.id);
+    if (!mine.length) return c;
+    const tasks = c.tasks.map(t => ({ ...t }));
+    for (const d of mine) {
+      const t = tasks[d.taskIdx]; if (!t) continue;
+      if (d.status === "了承") { t.start = d.start; t.end = d.end; t.confirmed = true; t.craftsman = d.craftsman; t.pending = null; }
+      else if (d.status === "依頼中" || d.status === "相談") { t.pending = { craftsman: d.craftsman, start: d.start, end: d.end, status: d.status }; if (!t.craftsman) t.craftsman = d.craftsman; }
+    }
+    return { ...c, tasks };
+  });
+}

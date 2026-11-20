@@ -590,7 +590,20 @@
      "end": "2027-01-02",
      "done": 0
     }
-   ]
+   ],
+   "source": "紹介",
+   "request": "浴室とキッチンの入れ替え",
+   "budget": 4000000,
+   "visitDate": "2026-11-05",
+   "contractType": "直接",
+   "contractDoc": "締結済",
+   "quotedOn": null,
+   "checklist": {
+    "neighborhood": true,
+    "materials": true,
+    "craftsmen": true,
+    "curing": true
+   }
   },
   {
    "id": "C002",
@@ -646,7 +659,20 @@
      "end": "2027-01-07",
      "done": 0
     }
-   ]
+   ],
+   "source": "元請けから",
+   "request": "2階の床と壁の張替え",
+   "budget": 1300000,
+   "visitDate": "2026-11-20",
+   "contractType": "元請け経由",
+   "contractDoc": "受領済",
+   "quotedOn": null,
+   "checklist": {
+    "neighborhood": true,
+    "materials": true,
+    "craftsmen": true,
+    "curing": true
+   }
   },
   {
    "id": "C003",
@@ -702,7 +728,20 @@
      "end": "2027-02-06",
      "done": 0
     }
-   ]
+   ],
+   "source": "元請けから",
+   "request": "共用部の補修",
+   "budget": 700000,
+   "visitDate": "2026-12-03",
+   "contractType": "元請け経由",
+   "contractDoc": "未",
+   "quotedOn": null,
+   "checklist": {
+    "neighborhood": false,
+    "materials": true,
+    "craftsmen": false,
+    "curing": true
+   }
   },
   {
    "id": "C004",
@@ -715,7 +754,15 @@
    "status": "請求済",
    "note": "",
    "stage": 5,
-   "tasks": []
+   "tasks": [],
+   "source": "",
+   "request": "",
+   "budget": null,
+   "visitDate": null,
+   "contractType": "直接",
+   "contractDoc": "締結済",
+   "quotedOn": null,
+   "checklist": null
   },
   {
    "id": "C005",
@@ -728,7 +775,15 @@
    "status": "入金済",
    "note": "",
    "stage": 6,
-   "tasks": []
+   "tasks": [],
+   "source": "",
+   "request": "",
+   "budget": null,
+   "visitDate": null,
+   "contractType": "直接",
+   "contractDoc": "締結済",
+   "quotedOn": null,
+   "checklist": null
   },
   {
    "id": "C006",
@@ -741,7 +796,15 @@
    "status": "請求済",
    "note": "",
    "stage": 5,
-   "tasks": []
+   "tasks": [],
+   "source": "",
+   "request": "",
+   "budget": null,
+   "visitDate": null,
+   "contractType": "直接",
+   "contractDoc": "締結済",
+   "quotedOn": null,
+   "checklist": null
   },
   {
    "id": "C007",
@@ -754,7 +817,15 @@
    "status": "見積り中",
    "note": "提案書を提出済み",
    "stage": 1,
-   "tasks": []
+   "tasks": [],
+   "source": "問い合わせ",
+   "request": "全面リフォーム（水まわり・内装）",
+   "budget": 7500000,
+   "visitDate": "2026-11-25",
+   "contractType": "直接",
+   "contractDoc": "未",
+   "quotedOn": "2026-12-02",
+   "checklist": null
   },
   {
    "id": "C008",
@@ -767,7 +838,15 @@
    "status": "見積り中",
    "note": "",
    "stage": 1,
-   "tasks": []
+   "tasks": [],
+   "source": "紹介",
+   "request": "トイレの交換",
+   "budget": 1500000,
+   "visitDate": "2026-12-08",
+   "contractType": "直接",
+   "contractDoc": "未",
+   "quotedOn": "2026-12-14",
+   "checklist": null
   },
   {
    "id": "C009",
@@ -823,7 +902,20 @@
      "end": "2027-02-13",
      "done": 0
     }
-   ]
+   ],
+   "source": "元請けから",
+   "request": "外壁と屋根の補修",
+   "budget": 3200000,
+   "visitDate": "2026-12-10",
+   "contractType": "元請け経由",
+   "contractDoc": "未",
+   "quotedOn": null,
+   "checklist": {
+    "neighborhood": false,
+    "materials": false,
+    "craftsmen": false,
+    "curing": false
+   }
   },
   {
    "id": "C010",
@@ -836,7 +928,15 @@
    "status": "入金済",
    "note": "",
    "stage": 6,
-   "tasks": []
+   "tasks": [],
+   "source": "",
+   "request": "",
+   "budget": null,
+   "visitDate": null,
+   "contractType": "直接",
+   "contractDoc": "締結済",
+   "quotedOn": null,
+   "checklist": null
   },
   {
    "id": "C011",
@@ -849,7 +949,15 @@
    "status": "失注",
    "note": "他社で決定",
    "stage": 0,
-   "tasks": []
+   "tasks": [],
+   "source": "",
+   "request": "",
+   "budget": null,
+   "visitDate": null,
+   "contractType": "直接",
+   "contractDoc": "未",
+   "quotedOn": null,
+   "checklist": null
   },
   {
    "id": "C012",
@@ -905,7 +1013,20 @@
      "end": "2026-12-22",
      "done": 0
     }
-   ]
+   ],
+   "source": "紹介",
+   "request": "2階の水まわり改修",
+   "budget": 2700000,
+   "visitDate": "2026-10-30",
+   "contractType": "直接",
+   "contractDoc": "締結済",
+   "quotedOn": null,
+   "checklist": {
+    "neighborhood": true,
+    "materials": true,
+    "craftsmen": true,
+    "curing": true
+   }
   },
   {
    "id": "C013",
@@ -918,7 +1039,15 @@
    "status": "",
    "note": "問い合わせ段階",
    "stage": 0,
-   "tasks": []
+   "tasks": [],
+   "source": "問い合わせ",
+   "request": "壁紙の張替え（相談）",
+   "budget": null,
+   "visitDate": null,
+   "contractType": "直接",
+   "contractDoc": "未",
+   "quotedOn": null,
+   "checklist": null
   },
   {
    "id": "C014",
@@ -934,47 +1063,60 @@
    "tasks": [
     {
      "name": "工程表作成・職人と資材の手配",
-     "start": "2027-01-08",
-     "end": "2027-01-11",
+     "start": "2026-12-22",
+     "end": "2026-12-25",
      "done": 0
     },
     {
      "name": "近隣挨拶・現場養生",
-     "start": "2027-01-12",
-     "end": "2027-01-13",
+     "start": "2026-12-26",
+     "end": "2026-12-27",
      "done": 0
     },
     {
      "name": "解体・撤去",
-     "start": "2027-01-14",
-     "end": "2027-01-18",
+     "start": "2026-12-28",
+     "end": "2027-01-01",
      "done": 0
     },
     {
      "name": "下地・設備工事",
-     "start": "2027-01-19",
-     "end": "2027-01-25",
+     "start": "2027-01-02",
+     "end": "2027-01-08",
      "done": 0
     },
     {
      "name": "内装・仕上げ",
-     "start": "2027-01-26",
-     "end": "2027-02-04",
+     "start": "2027-01-09",
+     "end": "2027-01-18",
      "done": 0
     },
     {
      "name": "社内検査・手直し",
-     "start": "2027-02-05",
-     "end": "2027-02-08",
+     "start": "2027-01-19",
+     "end": "2027-01-22",
      "done": 0
     },
     {
      "name": "お客様立ち会い・引き渡し",
-     "start": "2027-02-09",
-     "end": "2027-02-09",
+     "start": "2027-01-23",
+     "end": "2027-01-23",
      "done": 0
     }
-   ]
+   ],
+   "source": "紹介",
+   "request": "リビングの床と壁紙",
+   "budget": 2000000,
+   "visitDate": "2026-12-05",
+   "contractType": "直接",
+   "contractDoc": "締結済",
+   "quotedOn": null,
+   "checklist": {
+    "neighborhood": false,
+    "materials": true,
+    "craftsmen": true,
+    "curing": false
+   }
   }
  ],
  "workflow": {
@@ -1073,6 +1215,177 @@
    "name": "養生・清掃",
    "unit": "式",
    "price": 40000
+  }
+ ],
+ "craftsmen": [
+  "職人A",
+  "職人B",
+  "職人C"
+ ],
+ "dispatches": [
+  {
+   "id": "D001",
+   "caseId": "C002",
+   "taskIdx": 4,
+   "craftsman": "職人A",
+   "start": "2026-12-24",
+   "end": "2026-12-26",
+   "status": "依頼中",
+   "sentOn": "2026-12-13",
+   "memo": ""
+  },
+  {
+   "id": "D002",
+   "caseId": "C001",
+   "taskIdx": 4,
+   "craftsman": "職人B",
+   "start": "2026-12-20",
+   "end": "2026-12-28",
+   "status": "依頼中",
+   "sentOn": "2026-12-17",
+   "memo": ""
+  },
+  {
+   "id": "D003",
+   "caseId": "C012",
+   "taskIdx": 5,
+   "craftsman": "職人C",
+   "start": "2026-12-20",
+   "end": "2026-12-23",
+   "status": "相談",
+   "sentOn": "2026-12-16",
+   "memo": "別の現場と重なります"
+  },
+  {
+   "id": "D004",
+   "caseId": "C001",
+   "taskIdx": 3,
+   "craftsman": "職人A",
+   "start": "2026-12-13",
+   "end": "2026-12-19",
+   "status": "了承",
+   "sentOn": "2026-12-08",
+   "memo": ""
+  }
+ ],
+ "reports": [
+  {
+   "id": "R001",
+   "caseId": "C001",
+   "date": "2026-12-15",
+   "author": "担当A",
+   "kind": "日報",
+   "text": "下地の補修を進めた。浴室まわりの配管を確認。",
+   "photos": [
+    "s:1",
+    "s:2"
+   ],
+   "change": null
+  },
+  {
+   "id": "R002",
+   "caseId": "C001",
+   "date": "2026-12-16",
+   "author": "職人A",
+   "kind": "日報",
+   "text": "設備工事を進めた。明日、残りの配線を行う。",
+   "photos": [
+    "s:3"
+   ],
+   "change": null
+  },
+  {
+   "id": "R003",
+   "caseId": "C001",
+   "date": "2026-12-17",
+   "author": "職人A",
+   "kind": "日報",
+   "text": "配線が完了。キッチン側の下地は明日の予定。",
+   "photos": [
+    "s:4",
+    "s:5"
+   ],
+   "change": null
+  },
+  {
+   "id": "R004",
+   "caseId": "C002",
+   "date": "2026-12-12",
+   "author": "担当B",
+   "kind": "日報",
+   "text": "床の下地を確認。",
+   "photos": [
+    "s:6"
+   ],
+   "change": null
+  },
+  {
+   "id": "R005",
+   "caseId": "C002",
+   "date": "2026-12-14",
+   "author": "職人B",
+   "kind": "日報",
+   "text": "床の下地補修が半分終わった。",
+   "photos": [],
+   "change": null
+  },
+  {
+   "id": "R006",
+   "caseId": "C012",
+   "date": "2026-12-17",
+   "author": "担当E",
+   "kind": "日報",
+   "text": "仕上げが終わり、社内検査の準備に入った。壁の下地に傷みが見つかった。",
+   "photos": [
+    "s:7",
+    "s:8"
+   ],
+   "change": {
+    "flag": true,
+    "text": "壁下地の傷みの補修を追加（約2日・追加費用の見込みあり）",
+    "approval": "未承認"
+   }
+  },
+  {
+   "id": "R007",
+   "caseId": "C012",
+   "date": "2026-12-18",
+   "author": "職人C",
+   "kind": "日報",
+   "text": "補修箇所を養生。検査は日程の相談中。",
+   "photos": [
+    "s:9"
+   ],
+   "change": null
+  }
+ ],
+ "meetings": [
+  {
+   "id": "M001",
+   "caseId": "C001",
+   "date": "2026-11-10",
+   "attendees": "担当A・お客様",
+   "text": "浴室とキッチンを新しくしたいです。予算は400万円くらいで考えています。工期は12月からお願いします。ではそれでお願いします。",
+   "source": "手入力",
+   "result": "合意"
+  },
+  {
+   "id": "M002",
+   "caseId": "C007",
+   "date": "2026-12-02",
+   "attendees": "担当E・お客様ご夫婦",
+   "text": "水まわりと内装をまとめて直したいです。予算は750万円くらい。キッチンとトイレとお風呂を交換、リビングのクロスも張り替えたい、30㎡くらいです。いったん家族で相談して決めます。",
+   "source": "音声（Plaud）※この見本では手入力",
+   "result": "検討中"
+  },
+  {
+   "id": "M003",
+   "caseId": "C011",
+   "date": "2026-12-05",
+   "attendees": "担当B・お客様",
+   "text": "検討の結果、今回は他社さんにお願いすることにしました。見送りでお願いします。",
+   "source": "手入力",
+   "result": "不成立"
   }
  ]
 }
