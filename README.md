@@ -14,3 +14,4 @@
 - 操作マニュアルには、全ページの画面の写真（manual-img/）を入れてあります。
 - 色味は、画面上の丸いボタンで4種類に切り替えられます。
 - 計算の試験：`node --test tests/calc.test.mjs`
+- 公開先：GitHub Pages と Vercel（https://allarea-profit-dashboard-sample.vercel.app）。このリポジトリのmainに更新を送ると、Vercelにも自動で反映されます。
