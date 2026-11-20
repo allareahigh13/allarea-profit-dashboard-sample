@@ -1,6 +1,6 @@
 /* 現場進捗状況：全現場の状況・現場の詳細（工程表・日報と写真・職人の依頼・着工前チェック）・職人の確認ページ・アラート。 */
 import * as C from "./calc.js";
-import { state, getCases, getDispatches, getReports, getAlerts, getMemos, saveMore, saveEdits } from "./state.js";
+import { state, getCases, getDispatches, getReports, getAlerts, getMemos, getOrders, orderPatch, orderAdd, saveMore, saveEdits } from "./state.js";
 import { esc, svgI, ICON, kpi } from "./ui.js";
 import { memoFormHtml, memoCard } from "./memos.js";
 import { stageTracker, ganttHtml, stLabel, pill, yen, pct, opt, th } from "./pages2.js";
@@ -154,11 +154,32 @@ function detailHtml(all, sites, alerts, reports) {
     <div class="now-box"><small>次</small><b>${now.doing.length ? (c.tasks.find(t => t.done < 100 && t !== now.doing[0] && C.parseDate(t.start) > C.parseDate(asOf))?.name || "（これが最後の工程）") : now.next ? esc(now.next.name) : "—"}</b><span>${now.next ? md(now.next.start) + "〜" + md(now.next.end) : "工期 " + p.start + " 〜 " + p.end}</span></div>
     <div class="now-box ${pend ? "warn" : ""}"><small>追加・変更工事</small><b>${chg.length ? chg.length + "件" : "なし（工程どおり）"}</b><span>${pend ? `承認待ち ${pend}件` : chg.length ? "すべて承認済み" : "日報に出ると、ここに表示されます"}</span></div></div>`;
   const checks = c.checklist ? `<div class="checks" role="group" aria-label="着工前の準備">${Object.keys(CHECK_LABELS).map(k => `<label class="chk"><input type="checkbox" data-check="${esc(c.id)}:${k}" ${c.checklist[k] ? "checked" : ""}> ${CHECK_LABELS[k]}</label>`).join("")}</div>` : `<p class="note">この現場には、着工前チェックの記録がありません。</p>`;
-  const a0 = C.addDays(p.start < asOf ? p.start : asOf, -2), b0 = C.addDays(p.end > asOf ? p.end : asOf, 3);
+  const ords = getOrders().filter(o => o.caseId === c.id && c.tasks[o.taskIdx]).map(o => ({ ...o, task: c.tasks[o.taskIdx], due: C.orderDue(o, c.tasks[o.taskIdx], asOf) }));
+  const ordDates = ords.map(o => o.due.orderBy), minD = [p.start, asOf, ...ordDates.filter(d => !d.startsWith("0"))].sort()[0];
+  const a0 = C.addDays(minD, -2), b0 = C.addDays(p.end > asOf ? p.end : asOf, 3);
   const dsByTask = i => ds.filter(d => d.taskIdx === i).slice(-1)[0];
   const rows = c.tasks.map((t, i) => { const s = C.taskState(t, asOf), d = dsByTask(i), who = t.craftsman || d?.craftsman; const badge = t.confirmed ? '<span class="chip-ok">確認済み</span>' : t.pending ? `<span class="chip-${t.pending.status === "相談" ? "bad" : "wait"}">${t.pending.status === "相談" ? "相談あり" : "確認待ち"}</span>` : "";
-    return { labelHtml: `<b>${i + 1}. ${esc(t.name)}</b><small>${esc(who || "職人 未定")} ${badge}</small>`, start: t.start, end: t.end, done: t.done, state: s, title: `${t.name}：${t.start}〜${t.end}／${Math.round(t.done)}%` }; });
+    const my = ords.filter(o => o.taskIdx === i), notYet = my.filter(o => o.due.state !== "発注済み");
+    const marks = my.map(o => { const dn = o.due.state === "発注済み", late = o.due.state === "期限切れ", near = o.due.state === "期限間近"; return { date: o.due.orderBy, cls: dn ? "ok" : late ? "late" : near ? "near" : "far", text: dn ? "✓" : late ? "!" : "発", title: `資材「${o.name}」の発注${dn ? "：発注済み（" + o.orderedOn + "）" : "期限：" + o.due.orderBy + (late ? "（" + -o.due.daysLeft + "日過ぎ）" : "（あと" + o.due.daysLeft + "日）")}` }; });
+    const ordNote = my.length ? ` <span class="ord-note ${notYet.some(o => o.due.state === "期限切れ") ? "late" : notYet.some(o => o.due.state === "期限間近") ? "near" : ""}">資材${my.length}件${notYet.length ? "（未発注 " + notYet.length + "）" : "（発注済み）"}</span>` : "";
+    return { marks, labelHtml: `<b>${i + 1}. ${esc(t.name)}</b><small>${esc(who || "職人 未定")} ${badge}${ordNote}</small>`, start: t.start, end: t.end, done: t.done, state: s, title: `${t.name}：${t.start}〜${t.end}／${Math.round(t.done)}%` }; });
   const trs = c.tasks.map((t, i) => { const s = C.taskState(t, asOf), d = dsByTask(i); return `<tr><td>${i + 1}</td><td class="txt">${esc(t.name)}</td><td>${md(t.start)}〜${md(t.end)}</td><td>${stLabel(s)}</td><td><input class="cell-in" type="number" min="0" max="100" step="5" inputmode="numeric" aria-label="${esc(t.name)}の進み具合（％）" data-task-pct="${esc(c.id)}:${i}" value="${Math.round(t.done)}"> %</td><td class="txt">${esc(t.craftsman || "未定")}${t.confirmed ? ' <span class="chip-ok">確認済み</span>' : d && d.status === "依頼中" ? ' <span class="chip-wait">確認待ち</span>' : d && d.status === "相談" ? ' <span class="chip-bad">相談あり</span>' : ""}</td><td>${t.done >= 100 ? "" : `<button type="button" class="btn small" data-task-done="${esc(c.id)}:${i}">完了にする</button>`}</td></tr>`; }).join("");
+
+  const ordSorted = [...ords].sort((x, y) => (x.due.state === "発注済み") - (y.due.state === "発注済み") || x.due.orderBy.localeCompare(y.due.orderBy));
+  const oc = { late: ords.filter(o => o.due.state === "期限切れ").length, near: ords.filter(o => o.due.state === "期限間近").length, done: ords.filter(o => o.due.state === "発注済み").length, far: ords.filter(o => o.due.state === "まだ先").length };
+  const stCell = o => { const d = o.due; return d.state === "発注済み" ? `<span class="chip-ok">発注済み（${md(o.orderedOn)}）</span>` : d.state === "期限切れ" ? `<span class="chip-bad">間に合っていません（${-d.daysLeft}日過ぎ）</span>` : d.state === "期限間近" ? `<span class="chip-wait">${d.daysLeft === 0 ? "今日が期限" : "あと" + d.daysLeft + "日"}</span>` : `<span class="chip-plain">まだ先（あと${d.daysLeft}日）</span>`; };
+  const ordTable = ordSorted.length ? `<div class="tablewrap"><table class="tbl"><thead><tr>${["発注済み", "品名", "工程", "数量", "納品の必要日", "発注の期限", "状況", ""].map(th).join("")}</tr></thead><tbody>${ordSorted.map(o => `<tr class="${o.due.state === "期限切れ" ? "row-late" : o.due.state === "期限間近" ? "row-near" : ""}"><td><input type="checkbox" class="ord-chk" data-order-check="${esc(o.id)}" ${o.orderedOn ? "checked" : ""} aria-label="${esc(o.name)}を発注済みにする"></td><td class="txt"><b>${esc(o.name)}</b>${o.supplier ? `<br><small>${esc(o.supplier)}</small>` : ""}</td><td class="txt">${esc(o.task.name)}（着工 ${md(o.task.start)}）</td><td>${esc(o.qty)}${esc(o.unit || "")}</td><td>${md(o.due.needBy)}（${wk(o.due.needBy)}）</td><td><b>${md(o.due.orderBy)}（${wk(o.due.orderBy)}）</b><br><small>納品まで${esc(o.leadDays)}日</small></td><td>${stCell(o)}</td><td>${String(o.id).startsWith("ON") ? `<button type="button" class="btn small" data-order-del="${esc(o.id)}" aria-label="${esc(o.name)}を消す">消す</button>` : ""}</td></tr>`).join("")}</tbody></table></div>` : `<p class="note">この現場の「発注するもの」は、まだありません。下の欄から足せます。</p>`;
+  const oForm = `<form id="orderForm" novalidate><input type="hidden" name="caseId" value="${esc(c.id)}"><div class="form-grid">
+    <div class="field"><label for="o_task">使う工程</label><select id="o_task" name="taskIdx" class="sel">${c.tasks.map((t, i) => t.done < 100 ? `<option value="${i}">${i + 1}. ${esc(t.name)}（着工 ${md(t.start)}）</option>` : "").join("")}</select></div>
+    <div class="field"><label for="o_name">品名（資材・材料・商材）</label><input id="o_name" name="name" type="text" maxlength="50" class="cell-in wide" style="min-width:0"></div>
+    <div class="field"><label for="o_qty">数量</label><input id="o_qty" name="qty" type="number" min="0" step="any" inputmode="decimal" value="1"></div>
+    <div class="field"><label for="o_unit">単位</label><input id="o_unit" name="unit" type="text" maxlength="6" value="式" class="cell-in short"></div>
+    <div class="field"><label for="o_lead">頼んでから届くまでの日数</label><input id="o_lead" name="leadDays" type="number" min="0" max="120" step="1" inputmode="numeric" value="3"></div></div>
+    <div class="tools" style="margin-top:10px"><button class="btn" type="submit">発注するものに足す</button></div><p class="msg" id="ordMsg" role="status"></p></form>`;
+  const ordSection = `<section class="card panel"><h2 class="ttl">発注するもの（資材・材料）</h2>
+    <p class="sub2">納品は、早すぎても現場の邪魔になるので、着工の前日に合わせます。<b>発注の期限＝着工の前日 −「頼んでから届くまでの日数」</b>。期限の5日前から、アラートでお知らせします（発注済みにチェックを入れると消えます）。工程表の「発」「!」「✓」は、その発注の期限の日です。</p>
+    <div class="chips-row"><span class="chip-bad">間に合っていない ${oc.late}件</span><span class="chip-wait">期限が近い ${oc.near}件</span><span class="chip-plain">まだ先 ${oc.far}件</span><span class="chip-ok">発注済み ${oc.done}件</span></div>
+    ${ordTable}<details style="margin-top:10px"${ords.length ? "" : " open"}><summary class="h3" style="cursor:pointer">発注するものを足す</summary>${oForm}</details></section>`;
   const openTasks = c.tasks.map((t, i) => [t, i]).filter(([t]) => t.done < 100);
   const dForm = `<form id="dispatchForm" novalidate><input type="hidden" name="caseId" value="${esc(c.id)}"><div class="form-grid">
     <div class="field"><label for="d_task">工程</label><select id="d_task" name="taskIdx" class="sel">${openTasks.map(([t, i]) => `<option value="${i}">${i + 1}. ${esc(t.name)}</option>`).join("")}</select></div>
@@ -178,6 +199,7 @@ function detailHtml(all, sites, alerts, reports) {
     <section class="card panel"><h2 class="ttl">工程表（進捗）</h2><p class="sub2">基準日 ${asOf}（縦線が今日）。枠の色は状態（水色＝進行中・緑＝完了・黄＝遅れ気味・赤＝遅れ・灰＝未着手）、棒の中の色は進み具合です。</p>
       ${ganttHtml(rows, a0, b0, asOf, { aria: `${c.name}の工程表` })}
       <div class="tablewrap" style="margin-top:12px"><table class="tbl"><thead><tr>${["", "工程", "日程", "状態", "進み具合", "職人", ""].map(th).join("")}</tr></thead><tbody>${trs}</tbody></table></div></section>
+    ${ordSection}
     <section class="grid2"><section class="card panel"><h2 class="ttl">職人に日程を依頼する</h2><p class="sub2">日程の候補を選んで依頼します。職人は、専用ページで「確認しました」を押すだけです。押すと、工程表に自動で反映されます。都合が合わないときは「代表に相談」で、こちらに連絡が来ます。</p>${dForm}<h3 class="h3">この現場の依頼</h3>${dList}
       <details style="margin-top:10px"><summary class="h3" style="cursor:pointer">職人の専用ページ（見本のリンク）</summary><div class="links">${links}</div><p class="note">本番では、職人ごとに別々の専用リンクを送ります（この見本では、画面の中で職人を切り替えて試せます）。<a href="#/craftsman">職人の確認ページを開く</a></p></details></section>
       <section class="card panel"><h2 class="ttl">日報・写真を上げる</h2>${reportFormHtml(sites, [c.person, ...state.data.craftsmen], c.person, c.id)}</section></section>
@@ -236,3 +258,15 @@ export function reportAdd(fd, photoIds) {
   state.reportsAdded.push({ id, caseId: fd.caseId, date: fd.date, author: fd.author || "", kind: "日報", text: text || "（写真のみ）", photos: photoIds, change: flag ? { flag: true, text: ctext, approval: fd.changeApproval || "未承認" } : null });
   saveMore(); return { ok: true, id };
 }
+
+/* ---------- 資材の発注の操作 ---------- */
+export function orderToggle(id, on) { orderPatch(id, { orderedOn: on ? state.data.asOf : null }); }
+export function orderCreate(fd) {
+  const name = String(fd.name || "").trim(); if (!name) return "品名を入れてください。";
+  const lead = Number(fd.leadDays), qty = Number(fd.qty), idx = Number(fd.taskIdx);
+  if (!Number.isFinite(idx) || fd.taskIdx === "" || fd.taskIdx == null) return "使う工程を選んでください。";
+  if (!Number.isFinite(lead) || lead < 0 || lead > 120) return "「頼んでから届くまでの日数」は、0〜120の数で入れてください。";
+  if (!Number.isFinite(qty) || qty < 0) return "数量は、0以上の数で入れてください。";
+  orderAdd({ caseId: fd.caseId, taskIdx: idx, name, qty, unit: String(fd.unit || "").trim(), leadDays: lead, orderedOn: null, supplier: "" }); return null;
+}
+export const orderRemove = id => orderPatch(id, { removed: true });

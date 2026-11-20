@@ -441,3 +441,39 @@ test("商談の整理：担当者名・相手・元請けか直接か・物件�
   assert.equal(c.resultGuess, "不成立"); assert.equal(c.place, "事務所"); assert.equal(c.counterpart, "山本様");
   const e = C.structureMeeting("", [], staff); assert.deepEqual([e.participants, e.counterpart, e.contractType, e.property, e.lines], [[], "", "直接", "", []]);
 });
+
+test("資材の発注期限：納品は着工の前日、発注期限＝納品の必要日−納品までの日数。状態は発注済み・期限切れ・期限間近・まだ先", () => {
+  const task = { name: "内装", start: "2026-12-19", end: "2026-12-28", done: 0 }, asOf = "2026-12-18";
+  const d = C.orderDue({ leadDays: 7, orderedOn: null }, task, asOf);
+  assert.equal(d.needBy, "2026-12-18"); assert.equal(d.orderBy, "2026-12-11"); assert.equal(d.daysLeft, -7); assert.equal(d.state, "期限切れ");
+  assert.equal(C.orderDue({ leadDays: 3, orderedOn: null }, task, asOf).orderBy, "2026-12-15");
+  assert.equal(C.orderDue({ leadDays: 0, orderedOn: null }, task, asOf).state, "期限間近");              // 今日が期限（あと0日）
+  assert.equal(C.orderDue({ leadDays: 0, orderedOn: null }, { ...task, start: "2026-12-30" }, asOf).state, "まだ先");
+  assert.equal(C.orderDue({ leadDays: 7, orderedOn: "2026-12-10" }, task, asOf).state, "発注済み");        // 発注済みなら期限は関係ない
+  assert.equal(C.orderDue({ leadDays: 2, orderedOn: null }, task, asOf, 0).needBy, "2026-12-19");          // 納品を着工の当日にする設定
+  assert.equal(C.orderDue({ leadDays: 2, orderedOn: null }, { ...task, start: "2026-12-26" }, asOf).state, "期限間近");   // 工程がずれると期限も動く
+});
+
+test("資材の発注アラート：期限切れは高、あと1日以内は中、2〜5日は低。発注済み・遠い先・完了した工程・失注は出ない", () => {
+  const asOf = "2026-12-18", mk = o => ({ id: "A", name: "試験邸", status: "進行中", stage: 2, contractDoc: "締結済", checklist: { neighborhood: true, materials: true, craftsmen: true, curing: true }, tasks: [{ name: "内装", start: "2026-12-26", end: "2026-12-30", done: 0 }], ...o });
+  const it = o => ({ id: "o1", caseId: "A", taskIdx: 0, name: "クロス", leadDays: 3, orderedOn: null, ...o });
+  const kinds = (cases, orders) => C.buildAlerts({ cases, orders, asOf, reports: [{ caseId: "A", date: asOf }] }).filter(a => a.kind === "資材発注").map(a => a.level);
+  assert.deepEqual(kinds([mk()], [it({ leadDays: 10 })]), ["高"]);        // 期限 12/15
+  assert.deepEqual(kinds([mk()], [it({ leadDays: 6 })]), ["中"]);         // 期限 12/19（あと1日）
+  assert.deepEqual(kinds([mk()], [it({ leadDays: 5 })]), ["低"]);         // 期限 12/20（あと2日）
+  assert.deepEqual(kinds([mk()], [it({ leadDays: 1 })]), []);             // 期限 12/24（まだ先）
+  assert.deepEqual(kinds([mk()], [it({ leadDays: 10, orderedOn: "2026-12-12" })]), []);
+  assert.deepEqual(kinds([mk({ tasks: [{ name: "内装", start: "2026-12-26", end: "2026-12-30", done: 100 }] })], [it({ leadDays: 10 })]), []);
+  assert.deepEqual(kinds([mk({ status: "失注" })], [it({ leadDays: 10 })]), []);
+  const a = C.buildAlerts({ cases: [mk()], orders: [it({ leadDays: 10 })], asOf, reports: [{ caseId: "A", date: asOf }] }).find(x => x.kind === "資材発注");
+  assert.ok(a.title.includes("クロス") && a.detail.includes("12-15") && a.detail.includes("3日過ぎて"));
+});
+
+test("タスクの進み具合：小項目があれば、チェックの割合。なければ入れた値。報告済み・完了は100", () => {
+  assert.equal(C.taskProgress({ status: "対応中", progress: 30 }), 30);
+  assert.equal(C.taskProgress({ status: "対応中", progress: 30, subs: [{ done: true }, { done: false }, { done: false }, { done: true }] }), 50);
+  assert.equal(C.taskProgress({ status: "対応中", progress: 30, subs: [{ done: true }, { done: false }, { done: false }] }), 33);
+  assert.equal(C.taskProgress({ status: "報告済", subs: [{ done: false }] }), 100);
+  assert.equal(C.taskProgress({ status: "完了", progress: 0 }), 100);
+  assert.equal(C.taskProgress({ status: "未着手", progress: 0, subs: [] }), 0);
+});

@@ -534,3 +534,24 @@ details>summary::before{content:"＋";margin-right:8px;color:var(--cyan-light)}d
 .inbox{display:grid;gap:8px;margin:8px 0}.inbox-item{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;border:1px solid var(--border);border-radius:12px;padding:10px 14px;background:rgba(var(--deep-rgb),.3)}.inbox-item.done{opacity:.65}
 .voice-box{margin-top:8px;display:grid;gap:8px;border:1px dashed var(--border);border-radius:12px;padding:10px 12px}.voice-box .chk{border-radius:10px;font-size:12.5px;line-height:1.5}
 @media (max-width:760px){.fn{grid-template-columns:96px minmax(0,1fr) 96px!important}.fn>span{overflow-wrap:anywhere;font-size:12.5px}.fn .c{font-size:12px}}
+
+/* タスクの大項目・小項目・メモ */
+.task-title{font-size:17px;line-height:1.5;font-weight:700}
+.subtasks{margin:10px 0 4px;padding:10px 12px;border:1px solid var(--line, rgba(255,255,255,.12));border-radius:10px;background:rgba(255,255,255,.03)}
+.subtasks h5{margin:0 0 8px;font-size:12px;font-weight:600;color:var(--text-secondary)}
+.sub-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0}
+.sub-row label{display:flex;gap:8px;align-items:center;flex:1;min-width:0;font-size:13.5px;cursor:pointer}
+.sub-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--c-plan, #4fd08a);flex:none}
+.sub-row.done label span{text-decoration:line-through;opacity:.6}
+.sub-add{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.task-memo{margin-top:10px}.task-memo label{display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px}
+.task-memo textarea{width:100%;box-sizing:border-box;min-height:56px;resize:vertical;font:inherit;font-size:13.5px;color:var(--text-primary,inherit);background:rgba(255,255,255,.04);border:1px solid var(--line, rgba(255,255,255,.14));border-radius:8px;padding:8px 10px}
+.dock-panel .task-title{font-size:15px}
+
+/* 工程表の中の資材発注マーク */
+.g-mark{position:absolute;top:50%;transform:translate(-50%,-50%);min-width:18px;height:18px;padding:0 3px;border-radius:9px;font-size:10.5px;font-weight:800;line-height:18px;text-align:center;z-index:3;border:1px solid rgba(0,0,0,.35);box-shadow:0 0 0 2px rgba(10,20,40,.55)}
+.g-mark.ok{background:#4fd08a;color:#06281a}.g-mark.near{background:#ffc247;color:#3a2600}.g-mark.late{background:#ff5d6c;color:#fff}.g-mark.far{background:#9fb3d1;color:#10223d}
+.ord-note{font-size:11px;padding:1px 6px;border-radius:8px;background:rgba(159,179,209,.18);color:var(--text-secondary)}.ord-note.near{background:rgba(255,194,71,.22);color:#ffd277}.ord-note.late{background:rgba(255,93,108,.25);color:#ff9aa4}
+.ord-chk{width:22px;height:22px;accent-color:#4fd08a;cursor:pointer}
+.row-late td{background:rgba(255,93,108,.08)}.row-near td{background:rgba(255,194,71,.07)}
+.chips-row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}.chip-plain{display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;background:rgba(159,179,209,.16);color:var(--text-secondary)}

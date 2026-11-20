@@ -201,6 +201,9 @@ document.addEventListener("click", e => {
   if (t.dataset.voice !== undefined) { startVoice(t); return; }
   if (t.dataset.dockToggle !== undefined) { state.dock.open = !state.dock.open; render(); return; }
   if (t.dataset.taskTab) { e.preventDefault(); state.tv.tab = t.dataset.taskTab; render(); return; }
+  if (t.dataset.orderDel) { S3.orderRemove(t.dataset.orderDel); render(); toast("発注するものから消しました。"); return; }
+  if (t.dataset.subAdd) { const id = t.dataset.subAdd, inp = document.querySelector(`[data-sub-text="${id}"]`), err = TK.taskSubAdd(id, inp?.value); if (err) { toast(err, "err"); return; } render(); toast("小項目を足しました。"); document.querySelector(`[data-sub-text="${id}"]`)?.focus(); return; }
+  if (t.dataset.subDel) { const [id, i] = t.dataset.subDel.split(":"); TK.taskSubDel(id, Number(i)); render(); toast("小項目を消しました。"); return; }
   if (t.dataset.taskAck) { TK.taskAck(t.dataset.taskAck); render(); toast("受け取りました。進み具合は、自分で更新してください。"); return; }
   if (t.dataset.taskReport) { const id = t.dataset.taskReport, note = document.querySelector(`[data-task-note="${id}"]`)?.value || ""; TK.taskReport(id, note); render(); toast("報告しました。依頼した人に届きます。"); return; }
   if (t.dataset.taskConfirm) { TK.taskConfirm(t.dataset.taskConfirm); render(); toast("完了にしました（一覧から消えました）。"); return; }
@@ -230,6 +233,9 @@ document.addEventListener("change", e => {
   const t = e.target;
   if (t.dataset.check) { const [id, k] = t.dataset.check.split(":"); S3.checkSet(id, k, t.checked); render(); return; }
   if (t.dataset.caseField) { const [id, key] = t.dataset.caseField.split(":"), err = CD.caseFieldSet(id, key, t.value); if (err) { toast(err, "err"); t.setAttribute("aria-invalid", "true"); return; } render(); toast("案件の項目を直しました。"); return; }
+  if (t.dataset.orderCheck) { S3.orderToggle(t.dataset.orderCheck, t.checked); render(); toast(t.checked ? "発注済みにしました（アラートが消えます）。" : "未発注に戻しました。"); return; }
+  if (t.dataset.subCheck) { const [id, i] = t.dataset.subCheck.split(":"); TK.taskSubToggle(id, Number(i)); render(); return; }
+  if (t.dataset.taskMemo) { TK.taskMemoSet(t.dataset.taskMemo, t.value); toast("メモを保存しました。"); return; }
   if (t.dataset.taskProg) { TK.taskSetProgress(t.dataset.taskProg, t.value); render(); return; }
   if (t.id === "meSel" || t.id === "meSel2") { TK.setMe(t.value); render(); toast(`${t.value} さんの画面に切り替えました。`); return; }
   if (t.id === "mtMonth") { state.mt.month = t.value; render(); return; }
@@ -247,6 +253,11 @@ document.addEventListener("submit", async e => {
     e.preventDefault(); const err = S3.dispatchCreate(Object.fromEntries(new FormData(f).entries())), m = document.querySelector("#dispMsg");
     if (err) { m.className = "msg err"; m.textContent = err; return; }
     render(); toast("職人に依頼しました。職人が確認すると、工程表に反映されます。"); return;
+  }
+  if (f.id === "orderForm") {
+    e.preventDefault(); const err = S3.orderCreate(Object.fromEntries(new FormData(f).entries())), m = document.querySelector("#ordMsg");
+    if (err) { m.className = "msg err"; m.textContent = err; return; }
+    render(); toast("発注するものに足しました。発注の期限が、工程表に出ます。"); return;
   }
   if (f.dataset.taskform !== undefined) {
     e.preventDefault(); const m = f.querySelector("[data-taskmsg]"), r = TK.taskCreate(Object.fromEntries(new FormData(f).entries()));

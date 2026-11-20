@@ -110,7 +110,7 @@ export function ganttHtml(rows, a, b, asOf, opts = {}) {
   const body = rows.map(r => {
     const x = left(r.start), w = Math.max(1.2, left(C.addDays(r.end, 1)) - x), cls = { "完了": "ok", "進行中": "go", "遅れ気味": "warn", "遅れ": "late", "未着手": "wait" }[r.state] || "wait";
     return `<div class="g-row"><div class="g-label">${r.labelHtml}</div><div class="g-line">${ticks.map(t => `<i class="g-grid" style="left:${left(t)}%"></i>`).join("")}${today}
-      <div class="g-bar ${cls}" style="left:${x}%;width:${w}%" title="${esc(r.title || "")}"><i style="width:${Math.max(0, Math.min(100, r.done))}%"></i><span>${Math.round(r.done)}%</span></div></div></div>`;
+      <div class="g-bar ${cls}" style="left:${x}%;width:${w}%" title="${esc(r.title || "")}"><i style="width:${Math.max(0, Math.min(100, r.done))}%"></i><span>${Math.round(r.done)}%</span></div>${(r.marks || []).map(m => `<span class="g-mark ${m.cls}" style="left:${left(m.date)}%" title="${esc(m.title || "")}">${m.text}</span>`).join("")}</div></div>`;
   }).join("");
   return `<div class="gantt" role="img" aria-label="${esc(opts.aria || "工程表")}"><div class="g-inner">${head}${body}</div></div>`;
 }

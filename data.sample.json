@@ -2105,6 +2105,21 @@
    "due": "2026-12-16",
    "status": "対応中",
    "progress": 40,
+   "subs": [
+    {
+     "text": "元請けの担当に電話する",
+     "done": true
+    },
+    {
+     "text": "費用の持ち分を確認する",
+     "done": false
+    },
+    {
+     "text": "追加分の見積が要るか聞く",
+     "done": false
+    }
+   ],
+   "memo": "",
    "ackedOn": "2026-12-12",
    "reportedOn": null,
    "reportNote": "",
@@ -2172,7 +2187,26 @@
    "createdOn": "2026-12-15",
    "due": "2026-12-25",
    "status": "対応中",
-   "progress": 30,
+   "progress": 50,
+   "subs": [
+    {
+     "text": "前回までの進み具合を整理する",
+     "done": true
+    },
+    {
+     "text": "各現場の遅れと原因をまとめる",
+     "done": true
+    },
+    {
+     "text": "来月の人員の配置案を作る",
+     "done": false
+    },
+    {
+     "text": "資材の発注スケジュールを入れる",
+     "done": false
+    }
+   ],
+   "memo": "骨子はできた。数字は経理から月曜に届く予定。配置案は担当Aと相談してから。",
    "ackedOn": "2026-12-15",
    "reportedOn": null,
    "reportNote": "",
@@ -2242,6 +2276,140 @@
    "source": "クラウド録音（サンプル）",
    "imported": true,
    "transcript": "担当B：サンプルV様の外壁の件で、事務所でお話ししました。\n山本様：検討の結果、今回は他社さんにお願いすることにしました。見送りでお願いします。"
+  }
+ ],
+ "orders": [
+  {
+   "id": "O001",
+   "caseId": "C001",
+   "taskIdx": 3,
+   "name": "給排水の配管材",
+   "qty": 1,
+   "unit": "式",
+   "leadDays": 3,
+   "orderedOn": "2026-12-05",
+   "supplier": "建材店A"
+  },
+  {
+   "id": "O002",
+   "caseId": "C001",
+   "taskIdx": 3,
+   "name": "電線・スイッチ類",
+   "qty": 1,
+   "unit": "式",
+   "leadDays": 2,
+   "orderedOn": "2026-12-08",
+   "supplier": "電材店B"
+  },
+  {
+   "id": "O003",
+   "caseId": "C001",
+   "taskIdx": 4,
+   "name": "ユニットバス",
+   "qty": 1,
+   "unit": "式",
+   "leadDays": 7,
+   "orderedOn": "2026-12-10",
+   "supplier": "設備メーカー"
+  },
+  {
+   "id": "O004",
+   "caseId": "C001",
+   "taskIdx": 4,
+   "name": "システムキッチン",
+   "qty": 1,
+   "unit": "式",
+   "leadDays": 10,
+   "orderedOn": "2026-12-06",
+   "supplier": "設備メーカー"
+  },
+  {
+   "id": "O005",
+   "caseId": "C001",
+   "taskIdx": 4,
+   "name": "フローリング",
+   "qty": 30,
+   "unit": "㎡",
+   "leadDays": 5,
+   "orderedOn": "2026-12-12",
+   "supplier": "建材店A"
+  },
+  {
+   "id": "O006",
+   "caseId": "C001",
+   "taskIdx": 4,
+   "name": "クロス",
+   "qty": 120,
+   "unit": "㎡",
+   "leadDays": 3,
+   "orderedOn": null,
+   "supplier": "建材店A"
+  },
+  {
+   "id": "O007",
+   "caseId": "C002",
+   "taskIdx": 4,
+   "name": "床材",
+   "qty": 40,
+   "unit": "㎡",
+   "leadDays": 5,
+   "orderedOn": null,
+   "supplier": "建材店A"
+  },
+  {
+   "id": "O008",
+   "caseId": "C002",
+   "taskIdx": 4,
+   "name": "壁材",
+   "qty": 60,
+   "unit": "㎡",
+   "leadDays": 3,
+   "orderedOn": null,
+   "supplier": "建材店A"
+  },
+  {
+   "id": "O009",
+   "caseId": "C012",
+   "taskIdx": 4,
+   "name": "トイレ",
+   "qty": 1,
+   "unit": "式",
+   "leadDays": 4,
+   "orderedOn": "2026-12-01",
+   "supplier": "設備メーカー"
+  },
+  {
+   "id": "O010",
+   "caseId": "C014",
+   "taskIdx": 2,
+   "name": "産廃コンテナ",
+   "qty": 1,
+   "unit": "台",
+   "leadDays": 2,
+   "orderedOn": null,
+   "supplier": "回収業者"
+  },
+  {
+   "id": "O011",
+   "caseId": "C014",
+   "taskIdx": 3,
+   "name": "給排水の配管材",
+   "qty": 1,
+   "unit": "式",
+   "leadDays": 3,
+   "orderedOn": null,
+   "supplier": "建材店A"
+  },
+  {
+   "id": "O012",
+   "caseId": "C003",
+   "taskIdx": 4,
+   "name": "ユニットバス",
+   "qty": 1,
+   "unit": "式",
+   "leadDays": 7,
+   "orderedOn": null,
+   "supplier": "設備メーカー"
   }
  ]
 }

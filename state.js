@@ -40,6 +40,7 @@ export const state = {
   inboxDone: store.get("inboxDone", {}),
   me: store.get("me", "代表"),
   taskState: store.get("taskState", { added: [], edits: {} }),
+  orderState: store.get("orderState", { added: [], edits: {} }),
   tv: { tab: "mine" },
   dock: { open: false },
   pp: { tab: "reform", selR: null, selA: null, sortR: { key: "profit", dir: -1 }, sortA: { key: "sales", dir: -1 } },
@@ -73,10 +74,14 @@ export function getTasks() { const d = state.taskState; return [...(state.data.t
 export function taskPatch(id, patch) { state.taskState.edits[id] = { ...(state.taskState.edits[id] || {}), ...patch }; store.set("taskState", state.taskState); }
 export function getMemos() { return [...(state.data.memos || []), ...state.memosAdded].map(m => ({ ...m, ...(state.memoEdits[m.id] || {}) })); }
 export function getMeetings() { return [...(state.data.meetings || []), ...state.meetingsAdded].map(m => ({ outcome: m.caseId ? "案件化" : "検討中", place: "", withWho: "", ...m, ...(state.meetingEdits[m.id] || {}) })); }
+/** 資材の発注（工程表の中の「発注するもの」）。見本のデータ＋足したもの、に、発注済みの日などの変更を重ねる。 */
+export function getOrders() { const d = state.orderState; return [...(state.data.orders || []), ...d.added].filter(o => !d.edits[o.id]?.removed).map(o => ({ ...o, ...(d.edits[o.id] || {}) })); }
+export function orderPatch(id, patch) { state.orderState.edits[id] = { ...(state.orderState.edits[id] || {}), ...patch }; store.set("orderState", state.orderState); }
+export function orderAdd(o) { const ids = getOrders().map(x => x.id); let n = state.orderState.added.length + 1, id = "ON" + String(n).padStart(3, "0"); while (ids.includes(id)) id = "ON" + String(++n).padStart(3, "0"); state.orderState.added.push({ id, ...o }); store.set("orderState", state.orderState); return id; }
 export function getInbox() { return (state.data.inbox || []).map(v => ({ ...v, imported: v.imported || !!state.inboxDone[v.id] })); }
 /** 確認済みにしたアラートを除いた一覧（all=true で全部）。確認済みは、その日の間だけ隠す。 */
 export function getAlerts(all = false) {
-  const list = C.buildAlerts({ cases: getCases(), dispatches: getDispatches(), reports: getReports(), memos: getMemos(), asOf: state.data.asOf });
+  const list = C.buildAlerts({ cases: getCases(), dispatches: getDispatches(), reports: getReports(), memos: getMemos(), orders: getOrders(), asOf: state.data.asOf });
   return all ? list : list.filter(a => state.ack[a.id] !== state.data.asOf);
 }
 export function saveMore() {

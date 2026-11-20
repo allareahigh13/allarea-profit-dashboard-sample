@@ -295,7 +295,7 @@ export function siteNow(tasks, asOf) {
 }
 
 /** 抜け漏れ・遅れのアラート。入力：{ cases, dispatches, reports, asOf }。各アラートは決まった id を持つ（確認済みにできる）。 */
-export function buildAlerts({ cases, dispatches = [], reports = [], memos = [], asOf }) {
+export function buildAlerts({ cases, dispatches = [], reports = [], memos = [], orders = [], asOf }) {
   const out = [], add = a => out.push(a);
   const days = d => dayDiff(d, asOf);
   for (const c of cases) {
@@ -330,6 +330,13 @@ export function buildAlerts({ cases, dispatches = [], reports = [], memos = [], 
     const t = c.tasks[d.taskIdx];
     if (d.status === "相談") add({ id: `consult:${d.id}`, level: "高", kind: "職人の相談", caseId: c.id, title: `職人から「代表に相談」：${d.craftsman}`, detail: `${c.name}の「${t ? t.name : ""}」（候補 ${d.start}〜${d.end}）。都合がつかないとの連絡です。${d.memo ? "ひと言：" + d.memo : ""}`, action: "別の日程を決め、もう一度依頼する" });
     if (d.status === "依頼中") { const w = days(d.sentOn); if (w >= 2) add({ id: `wait:${d.id}`, level: w >= 4 ? "高" : "中", kind: "職人の確認", caseId: c.id, title: `職人の確認待ちが ${w}日：${d.craftsman}`, detail: `${c.name}の「${t ? t.name : ""}」（候補 ${d.start}〜${d.end}）。依頼日は ${d.sentOn} です。`, action: "職人に、確認ボタンを押すよう連絡する" }); }
+  }
+  for (const o of orders) {   // 資材の発注期限（着工に間に合わせる。早すぎる発注は現場の邪魔になるので、期限に近づいてから知らせる）
+    const c = cases.find(x => x.id === o.caseId), t = c && c.tasks[o.taskIdx];
+    if (!c || !t || t.done >= 100 || !["受注", "進行中"].includes(c.status)) continue;
+    const d = orderDue(o, t, asOf);
+    if (d.state === "期限切れ") add({ id: `ord:${o.id}`, level: "高", kind: "資材発注", caseId: c.id, title: `資材の発注が間に合っていません：${o.name}`, detail: `${c.name}の「${t.name}」（着工 ${t.start}）。発注の期限は ${d.orderBy} で、${-d.daysLeft}日過ぎています。納品まで ${o.leadDays}日かかります。`, action: "すぐに発注し、納品日を確認する（遅れるなら、工程を調整する）" });
+    else if (d.state === "期限間近") add({ id: `ord:${o.id}`, level: d.daysLeft <= 1 ? "中" : "低", kind: "資材発注", caseId: c.id, title: `資材の発注期限が近づいています：${o.name}`, detail: `${c.name}の「${t.name}」（着工 ${t.start}）。${d.orderBy}（あと${d.daysLeft}日）までに発注します。納品まで ${o.leadDays}日かかります。`, action: "期限までに発注して、「発注済み」にチェックを入れる" });
   }
   for (const m of memos) {   // 処理されていないメモのリマインド
     if (m.status === "処理済") continue;
@@ -492,6 +499,12 @@ export function taskReminders(tasks, asOf, me) {
   return out.sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level]);
 }
 /** 見ている人のタスクの数（自分のもの／預けているもの／報告待ちなど）。完了は数えない。 */
+/** タスクの進み具合（%）。小項目があれば、チェックが入った割合。報告済み・完了は100。小項目がなければ、自分で入れた値。 */
+export function taskProgress(t) {
+  if (t.status === "完了" || t.status === "報告済") return 100;
+  const s = t.subs || [];
+  return s.length ? Math.round(s.filter(x => x.done).length / s.length * 100) : Math.max(0, Math.min(100, Number(t.progress) || 0));
+}
 export function taskCounts(tasks, me) {
   const open = tasks.filter(t => t.status !== "完了");
   return { mine: open.filter(t => t.assignee === me).length, newForMe: open.filter(t => t.assignee === me && isDelegated(t) && !t.ackedOn && t.status !== "報告済").length,
@@ -536,4 +549,12 @@ export function structureMeeting(text, templates = [], staff = []) {
   const property = (/([^\s、。「」：:（）()]{1,14}?(?:邸|マンション|ビル|アパート|店舗)[A-Za-zＡ-Ｚ0-9０-９]{0,4})/.exec(t) || [])[1] || "";
   const place = ["オンライン", "お客様宅", "事務所", "現地"].find(p => t.includes(p)) || "";
   return { ...base, speakers, participants: staffHere, counterpart, contractType: viaContractor ? "元請け経由" : "直接", contractor, property, place };
+}
+
+/* ===================== 資材の発注（工程表の中の「発注するもの」） ===================== */
+/** 発注の期限。納品は、早すぎると現場の邪魔になるので、着工の buffer 日前（既定1日前）に合わせる。発注期限＝納品の必要日 − 納品までの日数。 */
+export function orderDue(item, task, asOf, buffer = 1) {
+  const needBy = addDays(task.start, -buffer), orderBy = addDays(needBy, -(Number(item.leadDays) || 0)), daysLeft = dayDiff(asOf, orderBy);
+  const state = item.orderedOn ? "発注済み" : daysLeft < 0 ? "期限切れ" : daysLeft <= 5 ? "期限間近" : "まだ先";
+  return { needBy, orderBy, daysLeft, state };
 }

@@ -30,14 +30,21 @@ export function taskCardHtml(t, { compact = false } = {}) {
       else acts += `<button type="button" class="btn small" data-task-nudge="${esc(t.id)}">催促する</button>`;
     }
   }
-  const prog = mineRole && t.status !== "完了" && t.status !== "報告済"
-    ? `<div class="tprog"><label>進み具合（自分で管理）<input type="range" min="0" max="100" step="10" value="${t.progress}" data-task-prog="${esc(t.id)}" aria-label="${esc(t.title)}の進み具合"></label><b>${t.progress}%</b></div>`
-    : `<div class="tprog"><div class="bar-h"><i style="width:${t.progress}%"></i></div><b>${t.progress}%</b></div>`;
+  const subs = t.subs || [], pr = C.taskProgress(t), canEdit = (mineRole || byMe) && t.status !== "完了", id = esc(t.id);
+  const prog = subs.length ? `<div class="tprog"><div class="bar-h"><i style="width:${pr}%"></i></div><b>${pr}%</b><span class="sub2" style="margin:0">小項目 ${subs.filter(x => x.done).length}／${subs.length} 完了</span></div>`
+    : mineRole && t.status !== "完了" && t.status !== "報告済"
+      ? `<div class="tprog"><label>進み具合（自分で管理）<input type="range" min="0" max="100" step="10" value="${pr}" data-task-prog="${id}" aria-label="${esc(t.title)}の進み具合"></label><b>${pr}%</b></div>`
+      : `<div class="tprog"><div class="bar-h"><i style="width:${pr}%"></i></div><b>${pr}%</b></div>`;
+  const subHtml = compact && !subs.length ? "" : `<div class="subtasks"><h5>小項目${subs.length ? "（チェックすると、進み具合が自動で変わります）" : "（なくてOK。分けて進めたいときに足します）"}</h5>
+    ${subs.map((x, i) => `<div class="sub-row ${x.done ? "done" : ""}"><label><input type="checkbox" data-sub-check="${id}:${i}" ${x.done ? "checked" : ""} ${canEdit ? "" : "disabled"}> <span>${esc(x.text)}</span></label>${canEdit ? `<button type="button" class="btn small" data-sub-del="${id}:${i}" aria-label="「${esc(x.text)}」を消す">消す</button>` : ""}</div>`).join("")}
+    ${canEdit ? `<div class="sub-add"><input class="cell-in" type="text" maxlength="80" placeholder="小項目を足す（例：数字を集める）" aria-label="小項目を足す" data-sub-text="${id}" style="min-width:150px"><button type="button" class="btn small" data-sub-add="${id}">足す</button></div>` : ""}</div>`;
+  const memoHtml = compact ? (t.memo ? `<p class="sub2">メモ：${esc(t.memo)}</p>` : "")
+    : `<div class="task-memo"><label for="memo_${id}">メモ（進み具合・やること・気づき。入れると、その場で保存されます）</label><textarea id="memo_${id}" rows="2" maxlength="600" data-task-memo="${id}" ${canEdit || t.status === "完了" ? "" : "readonly"} placeholder="例：資料の骨子は完成。数字は経理から月曜に届く。">${esc(t.memo || "")}</textarea></div>`;
   return `<article class="task ${overdue ? "late" : ""} ${t.status === "報告済" ? "reported" : ""} ${mineRole && delegated && !t.ackedOn && t.status !== "完了" ? "new" : ""}">
-    <div class="rep-h"><b>${esc(t.title)}</b></div>
+    <div class="rep-h"><b class="task-title">${esc(t.title)}</b></div>
     <div class="tags"><span class="tag flat">${esc(t.createdBy)} → ${esc(t.assignee)}</span><span class="tag ${st}">${esc(t.status)}</span>${t.due ? `<span class="tag ${overdue ? "down" : "flat"}">期限 ${md(t.due)}</span>` : ""}<span class="tag flat">${age === 0 ? "今日" : age + "日前に依頼"}</span>
       ${cn ? `<a class="tag flat" href="#/sites" data-site-open="${esc(t.caseId)}">${esc(cn)}</a>` : ""}${mineRole && delegated && !t.ackedOn && t.status !== "完了" ? '<span class="tag down">新着</span>' : ""}${t.nudgedOn && t.status !== "完了" ? `<span class="tag down">催促あり ${md(t.nudgedOn)}</span>` : ""}</div>
-    ${!compact && t.detail ? `<p class="sub2">${esc(t.detail)}</p>` : ""}${t.reportNote && t.status !== "完了" ? `<p class="sub2">${t.status === "差し戻し" ? "差し戻しの理由" : "報告"}：${esc(t.reportNote)}</p>` : ""}${prog}${acts ? `<div class="req-actions">${acts}</div>` : ""}</article>`;
+    ${!compact && t.detail ? `<p class="sub2">${esc(t.detail)}</p>` : ""}${t.reportNote && t.status !== "完了" ? `<p class="sub2">${t.status === "差し戻し" ? "差し戻しの理由" : "報告"}：${esc(t.reportNote)}</p>` : ""}${prog}${subHtml}${memoHtml}${acts ? `<div class="req-actions">${acts}</div>` : ""}</article>`;
 }
 
 /* ---------- 依頼のフォーム ---------- */
@@ -109,7 +116,7 @@ export function taskCreate(fd) {
   const ids = getTasks().map(t => t.id); let n = state.taskState.added.length + 1, id = "TN" + String(n).padStart(3, "0");
   while (ids.includes(id)) id = "TN" + String(++n).padStart(3, "0");
   const self = fd.assignee === state.me;
-  state.taskState.added.push({ id, title, detail: String(fd.detail || "").trim(), caseId: fd.caseId || "", createdBy: state.me, assignee: fd.assignee, createdOn: state.data.asOf, due: fd.due || null, status: "未着手", progress: 0, ackedOn: self ? state.data.asOf : null, reportedOn: null, reportNote: "", nudges: 0, nudgedOn: null });
+  state.taskState.added.push({ id, title, detail: String(fd.detail || "").trim(), caseId: fd.caseId || "", createdBy: state.me, assignee: fd.assignee, createdOn: state.data.asOf, due: fd.due || null, status: "未着手", progress: 0, subs: [], memo: "", ackedOn: self ? state.data.asOf : null, reportedOn: null, reportNote: "", nudges: 0, nudgedOn: null });
   store.set("taskState", state.taskState); return { ok: true, id, self, to: fd.assignee };
 }
 const A = () => state.data.asOf;
@@ -121,3 +128,13 @@ export const taskSelfDone = id => taskPatch(id, { status: "完了", completedOn:
 export const taskReject = (id, note) => taskPatch(id, { status: "差し戻し", reportedOn: null, reportNote: String(note || "").trim() || "もう一度、確認してください" });
 export const taskNudge = id => { const t = getTasks().find(x => x.id === id); taskPatch(id, { nudges: (t.nudges || 0) + 1, nudgedOn: A() }); };
 export const setMe = p => { state.me = p; store.set("me", p); };
+
+/* ---- 小項目とメモ ---- */
+const setSubs = (id, subs) => { const t = getTasks().find(x => x.id === id), p = { subs }; if (subs.some(x => x.done) && t.status === "未着手") p.status = "対応中"; p.progress = subs.length ? Math.round(subs.filter(x => x.done).length / subs.length * 100) : t.progress; taskPatch(id, p); };
+export function taskSubAdd(id, text) {
+  const x = String(text || "").trim(); if (!x) return "小項目の中身を入れてください。";
+  const t = getTasks().find(y => y.id === id); setSubs(id, [...(t.subs || []), { text: x, done: false }]); return null;
+}
+export const taskSubToggle = (id, i) => { const t = getTasks().find(y => y.id === id), s = (t.subs || []).map((x, j) => (j === i ? { ...x, done: !x.done } : x)); setSubs(id, s); };
+export const taskSubDel = (id, i) => { const t = getTasks().find(y => y.id === id); setSubs(id, (t.subs || []).filter((_, j) => j !== i)); };
+export const taskMemoSet = (id, text) => taskPatch(id, { memo: String(text || "").slice(0, 600) });
