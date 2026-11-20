@@ -42,13 +42,67 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 @media print{figure.shot{break-inside:avoid}}
 @media (max-width:900px){table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}.btn{white-space:normal}.wrap{grid-template-columns:1fr}nav.toc{position:static;max-height:none}section.chap{padding:16px 14px}h2{font-size:21px}}
 @media print{nav.toc,.go{display:none}.wrap{display:block}body{background:#fff}section.chap{break-inside:auto;border:0;padding:0}}
+
+/* ===== 見やすさの調整（色分け・強調・余白） ===== */
+body{font-size:16.5px;line-height:1.95;letter-spacing:.01em}
+header.top{background:linear-gradient(120deg,#0e2342 0%,#0f4f7d 60%,#1286b8 100%);padding:40px 20px 34px;border-bottom:6px solid #35b7e8}
+header.top h1{font-size:32px;letter-spacing:.02em}
+header.top .badge{display:inline-block;margin:10px 8px 0 0;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);border-radius:99px;padding:2px 14px;font-size:14px}
+section.chap{--h:#0b7fb3;--hb:#eaf6fb;padding:0 0 26px;overflow:hidden;box-shadow:0 2px 10px rgba(14,35,66,.06)}
+section.chap > *{margin-left:28px;margin-right:28px}
+section.chap > h2{margin:0 0 18px;padding:16px 28px;background:linear-gradient(100deg,var(--h),color-mix(in srgb,var(--h) 70%,#fff));color:#fff;border:0;font-size:25px;display:flex;align-items:center;gap:12px}
+section.chap > h2 .go{margin-left:auto;float:none}section.chap > h2 .go a{color:#fff;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);border-radius:99px;padding:3px 14px;text-decoration:none;font-size:13.5px}
+section.chap > h2 .go a:hover{background:rgba(255,255,255,.35)}
+h3{background:var(--hb);border-left:7px solid var(--h);padding:8px 14px;border-radius:0 10px 10px 0;margin:34px 28px 12px;font-size:19.5px;color:#10223d}
+h4{margin:24px 28px 6px;font-size:17px;color:var(--h);padding-bottom:3px;border-bottom:2px dotted color-mix(in srgb,var(--h) 45%,#fff)}
+p,ul,ol,table,.box,figure.shot,.gist,.map{max-width:calc(100% - 56px)}
+p{margin:10px 28px}ul,ol{margin:8px 28px 12px;padding-left:26px}li{margin:5px 0}
+li::marker{color:var(--h);font-weight:700}
+p b,li b,td b,.box b:not(.t),.gist b{background:linear-gradient(transparent 58%,#fff0a0 58%);padding:0 2px;font-weight:700}
+.imp{background:linear-gradient(transparent 55%,#ffd2d8 55%);border-bottom:2px solid #d63a4e;font-weight:800;padding:0 2px}
+.key{background:#fff0a0;border-radius:4px;padding:0 5px;font-weight:700}
+.box{margin:14px 28px;padding:12px 16px 12px 46px;position:relative;border-width:1px 1px 1px 6px;line-height:1.85}
+.box::before{position:absolute;left:14px;top:10px;font-size:20px}
+.box.point{border-left-color:#0b7fb3}.box.point::before{content:"💡"}
+.box.warn{border-left-color:#e09a00}.box.warn::before{content:"⚠️"}
+.box.eff{border-left-color:#177a4d}.box.eff::before{content:"✅"}
+.box.bad{border-left-color:#d63a4e}.box.bad::before{content:"⛔"}
+.box b.t{display:block;font-size:15.5px;margin-bottom:3px;background:none;color:#10223d}
+.gist{margin:6px 28px 14px;background:linear-gradient(100deg,var(--hb),#fff);border:2px solid var(--h);border-radius:12px;padding:12px 18px;font-size:17px;line-height:1.8}
+.gist .tag{display:inline-block;background:var(--h);color:#fff;border-radius:99px;padding:0 12px;font-size:13.5px;font-weight:800;margin-right:8px;letter-spacing:.06em}
+.tw,table{margin-left:28px;margin-right:28px;width:calc(100% - 56px)}
+table{border:0;box-shadow:0 0 0 1px var(--line);border-radius:10px;overflow:hidden;border-collapse:separate;border-spacing:0}
+th{background:var(--hb);color:#10223d;border:0;border-bottom:2px solid var(--h);font-size:14px}
+td{border:0;border-bottom:1px solid var(--line)}tbody tr:nth-child(even) td{background:#f8fafd}tbody tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700;color:#10223d}
+figure.shot{margin:16px 28px;box-shadow:0 4px 14px rgba(14,35,66,.12);border-color:#b9c7da}
+figure.shot figcaption{border-top:3px solid var(--h);font-size:14px;color:#2c3e5c;background:#fff}
+figure.shot figcaption::before{content:"📷 ";}
+.step li::before{background:var(--h);box-shadow:0 2px 5px rgba(0,0,0,.2)}
+.step li{padding-left:44px}
+nav.toc{border-top:5px solid #0b7fb3;box-shadow:0 2px 10px rgba(14,35,66,.08)}
+nav.toc a{border-left:4px solid transparent;padding:2px 8px;border-radius:0 6px 6px 0}
+nav.toc a:hover{background:#eaf6fb;text-decoration:none}nav.toc a.on{background:#0b7fb3;color:#fff;border-left-color:#e9b400;font-weight:700}
+nav.toc b{margin:12px 0 4px;padding:2px 8px;background:#10223d;color:#fff;border-radius:6px;font-size:13px}
+#c-intro,#c-sample,#c-common,#c-flow{--h:#10223d;--hb:#e8edf6}
+#c-sample{--h:#c2410c;--hb:#fff1e6}
+#p-home{--h:#0b7fb3;--hb:#eaf6fb}#p-sales{--h:#0f8a8a;--hb:#e6f6f5}#p-pl{--h:#1f8a4c;--hb:#e9f7ee}
+#p-tasks{--h:#6d4bc2;--hb:#f0ebfb}#p-cases{--h:#c2640c;--hb:#fff1e2}#p-sites{--h:#c22f3f;--hb:#fdecee}
+#p-craftsman{--h:#8a5a2b;--hb:#f7efe6}#p-estimate{--h:#a02f86;--hb:#fbeaf6}#p-memos{--h:#b08400;--hb:#fff8dc}
+#p-activity{--h:#2f5fc2;--hb:#e9eefb}#p-staff{--h:#3a7d8f;--hb:#e6f3f6}#p-goals{--h:#7a8a0c;--hb:#f3f6dc}
+#p-report{--h:#4b4fc2;--hb:#eceefc}#p-ai{--h:#5a6b84;--hb:#eef1f6}
+#c-quick{--h:#0b7fb3;--hb:#eaf6fb}#c-color{--h:#a02f86;--hb:#fbeaf6}#c-words{--h:#177a4d;--hb:#e9f7ee}#c-faq{--h:#c2640c;--hb:#fff1e2}#c-limit{--h:#c22f3f;--hb:#fdecee}
+.totop{position:fixed;right:18px;bottom:18px;background:#10223d;color:#fff;border-radius:99px;padding:8px 16px;text-decoration:none;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:20;font-size:14px}
+@media (max-width:900px){section.chap > *,.box,h3,h4,p,ul,ol,.gist,table,figure.shot{margin-left:14px;margin-right:14px}p,ul,ol,table,.box,figure.shot,.gist{max-width:calc(100% - 28px)}table{width:calc(100% - 28px)}section.chap > h2{padding:14px 14px;font-size:21px;flex-wrap:wrap}section.chap > h2 .go{margin-left:0}body{font-size:16px}h3{margin:28px 14px 10px}h4{margin:20px 14px 6px}figure.shot.phone{margin-left:14px}}
+@media print{.totop{display:none}section.chap > h2{background:#fff!important;color:#10223d;border-bottom:3px solid var(--h)}}
 </style>
 </head>
-<body>
+<body id="top">
 <header class="top"><div class="in">
 <h1>経営ダッシュボード 操作マニュアル</h1>
 <p>どこに何があって、どう操作して、何が管理できるのか。画面ごと・ボタンごと・色や記号の意味まで、はじめての方向けにすべて説明します。</p>
 <p>対象の画面：経営ダッシュボード（見本）　／　見本の基準日：2026年12月18日（日付は固定してあります）</p>
+<span class="badge">全14ページの説明</span><span class="badge">画面の写真つき</span><span class="badge">はじめての方向け</span>
 </div></header>
 
 <div class="wrap">
@@ -104,11 +158,11 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <h2>2. 見本としての注意（先にお読みください）</h2>
 <div class="box warn"><b class="t">この画面は「見本」です</b>
 <ul>
-<li>数字・名前（サンプル邸A、担当A、職人Aなど）は、すべて<b>作り話の合成データ</b>です。本物のお客様や社員の情報は入っていません。画面の上にも「合成サンプル（実データではありません）」と出ています。</li>
-<li>入力した内容（タスク・メモ・日報・商談・発注のチェックなど）は、<b>いま見ているパソコン（ブラウザ）の中にだけ</b>保存されます。他の人の画面には届きませんし、別のパソコンには引き継がれません。</li>
+<li>数字・名前（サンプル邸A、担当A、職人Aなど）は、すべて<span class="imp">作り話の合成データ</span>です。本物のお客様や社員の情報は入っていません。画面の上にも「合成サンプル（実データではありません）」と出ています。</li>
+<li>入力した内容（タスク・メモ・日報・商談・発注のチェックなど）は、<span class="imp">いま見ているパソコン（ブラウザ）の中にだけ</span>保存されます。他の人の画面には届きませんし、別のパソコンには引き継がれません。</li>
 <li>日報の写真も、このブラウザの中にだけ（小さく縮めて）保存されます。</li>
 <li>「他の人に依頼して、相手の画面に届く」動きは、見本では<b>1つの画面の中で「見る人」を切り替えて</b>再現しています。実際に複数人で使うには、共通の保存先（サーバー）をつなぐ必要があります。</li>
-<li>AI（文章を考えるAI）と、録音サービス Plaud（プラウド）は<b>まだつないでいません</b>。AIのように見える提案は、決まった規則で作った文章です（詳しくは「9. 今できること／まだできないこと」）。</li>
+<li>AI（文章を考えるAI）と、録音サービス Plaud（プラウド）は<span class="imp">まだつないでいません</span>。AIのように見える提案は、決まった規則で作った文章です（詳しくは「9. 今できること／まだできないこと」）。</li>
 </ul></div>
 <div class="box point"><b class="t">元に戻したいとき</b>見本の入力内容は、ブラウザの保存を消すと最初の状態に戻ります（よくある質問をご覧ください）。</div>
 </section>
@@ -122,11 +176,11 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <div class="k"><b>④ 赤い帯（お知らせ）</b>：預けたタスクの報告待ちなどがあるときだけ出ます。「タスクを見る」で移動</div>
 <div class="b"><b>⑤ 本文</b>：数字のカード、グラフ、表、入力欄が、上から順に並びます</div>
 </div>
-<figure class="shot "><a href="manual-img/common-layout.jpg" target="_blank" rel="noopener"><img src="manual-img/common-layout.jpg" alt="ホーム画面の例。丸の赤い番号は、上の構成図の番号と同じです（①左メニュー ②ページの名前と説明 ③操作パネル ④赤い帯のお知らせ ⑤本文 ⑥右下の「タスク」ボタン）。" loading="lazy"></a><figcaption>図：ホーム画面の例。丸の赤い番号は、上の構成図の番号と同じです（①左メニュー ②ページの名前と説明 ③操作パネル ④赤い帯のお知らせ ⑤本文 ⑥右下の「タスク」ボタン）。</figcaption></figure>
+<figure class="shot "><a href="manual-img/common-layout.jpg" target="_blank" rel="noopener"><img src="manual-img/common-layout.jpg" alt="ホーム画面の例。丸の赤い番号は、上の構成図の番号と同じです（①左メニュー ②ページの名前と説明 ③操作パネル ④赤い帯のお知らせ ⑤本文 ⑥右下の「タスク」ボタン）。" width="1280" height="860" loading="lazy"></a><figcaption>図：ホーム画面の例。丸の赤い番号は、上の構成図の番号と同じです（①左メニュー ②ページの名前と説明 ③操作パネル ④赤い帯のお知らせ ⑤本文 ⑥右下の「タスク」ボタン）。</figcaption></figure>
 <p>右下には、どのページでも<b>「タスク」ボタン</b>が浮かんでいます（⑥）。押すと、タスクの小さな画面が開きます（詳しくは「タスク」の項）。</p>
 
 <h3>3-2. 左メニュー（①）</h3>
-<figure class="shot narrow"><a href="manual-img/common-nav.jpg" target="_blank" rel="noopener"><img src="manual-img/common-nav.jpg" alt="左メニュー。赤い丸の数字は「対応が必要な件数」です。いま開いているページは、枠で光ります。" loading="lazy"></a><figcaption>図：左メニュー。赤い丸の数字は「対応が必要な件数」です。いま開いているページは、枠で光ります。</figcaption></figure>
+<figure class="shot narrow"><a href="manual-img/common-nav.jpg" target="_blank" rel="noopener"><img src="manual-img/common-nav.jpg" alt="左メニュー。赤い丸の数字は「対応が必要な件数」です。いま開いているページは、枠で光ります。" width="224" height="860" loading="lazy"></a><figcaption>図：左メニュー。赤い丸の数字は「対応が必要な件数」です。いま開いているページは、枠で光ります。</figcaption></figure>
 
 <table><thead><tr><th>順番</th><th>メニュー</th><th>ひとことで</th></tr></thead><tbody>
 <tr><td>1</td><td>ホーム</td><td>今日やることと、全体の数字</td></tr>
@@ -149,10 +203,10 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <li>画面が狭いとき（スマホなど）は、メニューが<b>アイコンだけ</b>、または<b>画面の下の横に並ぶバー</b>に変わります。アイコンに触れる（マウスを乗せる）と名前が出ます。横にスクロールすると続きが見えます。</li>
 </ul>
 
-<figure class="shot phone"><a href="manual-img/mobile-home.jpg" target="_blank" rel="noopener"><img src="manual-img/mobile-home.jpg" alt="スマホ（幅390px）でのホーム。左メニューは、画面の下の横に並ぶバーに変わります。" loading="lazy"></a><figcaption>図：スマホ（幅390px）でのホーム。左メニューは、画面の下の横に並ぶバーに変わります。</figcaption></figure>
-<figure class="shot phone"><a href="manual-img/mobile-sites.jpg" target="_blank" rel="noopener"><img src="manual-img/mobile-sites.jpg" alt="スマホでの現場進捗状況。ガントチャートなどの広い図は、指でなぞって横にスクロールします。" loading="lazy"></a><figcaption>図：スマホでの現場進捗状況。ガントチャートなどの広い図は、指でなぞって横にスクロールします。</figcaption></figure>
+<figure class="shot phone"><a href="manual-img/mobile-home.jpg" target="_blank" rel="noopener"><img src="manual-img/mobile-home.jpg" alt="スマホ（幅390px）でのホーム。左メニューは、画面の下の横に並ぶバーに変わります。" width="390" height="844" loading="lazy"></a><figcaption>図：スマホ（幅390px）でのホーム。左メニューは、画面の下の横に並ぶバーに変わります。</figcaption></figure>
+<figure class="shot phone"><a href="manual-img/mobile-sites.jpg" target="_blank" rel="noopener"><img src="manual-img/mobile-sites.jpg" alt="スマホでの現場進捗状況。ガントチャートなどの広い図は、指でなぞって横にスクロールします。" width="390" height="844" loading="lazy"></a><figcaption>図：スマホでの現場進捗状況。ガントチャートなどの広い図は、指でなぞって横にスクロールします。</figcaption></figure>
 <h3>3-3. 操作パネル（③）で切り替えられるもの</h3>
-<figure class="shot "><a href="manual-img/common-controls.jpg" target="_blank" rel="noopener"><img src="manual-img/common-controls.jpg" alt="操作パネル。左から「分析期間」、比較の表示（前月比・前年比）、色味（丸いボタン4つ）、データ更新。ページによって、並ぶものが少し変わります。" loading="lazy"></a><figcaption>図：操作パネル。左から「分析期間」、比較の表示（前月比・前年比）、色味（丸いボタン4つ）、データ更新。ページによって、並ぶものが少し変わります。</figcaption></figure>
+<figure class="shot "><a href="manual-img/common-controls.jpg" target="_blank" rel="noopener"><img src="manual-img/common-controls.jpg" alt="操作パネル。左から「分析期間」、比較の表示（前月比・前年比）、色味（丸いボタン4つ）、データ更新。ページによって、並ぶものが少し変わります。" width="648" height="65" loading="lazy"></a><figcaption>図：操作パネル。左から「分析期間」、比較の表示（前月比・前年比）、色味（丸いボタン4つ）、データ更新。ページによって、並ぶものが少し変わります。</figcaption></figure>
 
 <p>ページによって、出るものが違います（下の表で「どのページで出るか」を示します）。</p>
 <table><thead><tr><th>名前</th><th>出るページ</th><th>効果</th></tr></thead><tbody>
@@ -209,10 +263,11 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <!-- ===================== ホーム ===================== -->
 <section class="chap" id="p-home">
 <h2>ホーム <span class="go"><a href="index.html#/home">画面を開く →</a></span></h2>
+<div class="gist"><span class="tag">ひとことで</span>朝いちばんに開く入口。<b>「今日やること」</b>を上から順に片づけ、会社全体の数字を一目で確かめます。</div>
 <p><b>場所</b>：左メニューの1番上「ホーム」。<b>目的</b>：まず開いて「今日やること」と会社全体の数字を確認する入口です。</p>
 <h3>画面の上から順に</h3>
 <h4>① 今日のチェック（4つの小さな箱）</h4>
-<figure class="shot "><a href="manual-img/home-check.jpg" target="_blank" rel="noopener"><img src="manual-img/home-check.jpg" alt="今日のチェック（4つの箱）。赤く光る箱は、急ぎの項目があるしるしです。" loading="lazy"></a><figcaption>図：今日のチェック（4つの箱）。赤く光る箱は、急ぎの項目があるしるしです。</figcaption></figure>
+<figure class="shot "><a href="manual-img/home-check.jpg" target="_blank" rel="noopener"><img src="manual-img/home-check.jpg" alt="今日のチェック（4つの箱）。赤く光る箱は、急ぎの項目があるしるしです。" width="1012" height="100" loading="lazy"></a><figcaption>図：今日のチェック（4つの箱）。赤く光る箱は、急ぎの項目があるしるしです。</figcaption></figure>
 
 <table><thead><tr><th>箱</th><th>意味</th><th>押すと</th></tr></thead><tbody>
 <tr><td>対応が必要なアラート</td><td>現場のアラートの件数（メモ以外）。赤く光っているときは「高」の急ぎがあります</td><td>現場進捗状況へ</td></tr>
@@ -221,8 +276,8 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <tr><td>見積り中の案件</td><td>お客様の返事待ちの案件の数</td><td>案件管理へ</td></tr>
 </tbody></table>
 <h4>② 今日やること（秘書の提案）</h4>
-<figure class="shot "><a href="manual-img/home-secretary-open.jpg" target="_blank" rel="noopener"><img src="manual-img/home-secretary-open.jpg" alt="今日やること（秘書の提案）。急ぎの順に並び、各項目のボタンで、その場で対応できます。" loading="lazy"></a><figcaption>図：今日やること（秘書の提案）。急ぎの順に並び、各項目のボタンで、その場で対応できます。</figcaption></figure>
-<figure class="shot "><a href="manual-img/home-secretary-detail.jpg" target="_blank" rel="noopener"><img src="manual-img/home-secretary-detail.jpg" alt="「秘書の分析」を開いたところ。原因・対応の進め方・AIが代わりにできること／人がすること、が出ます。" loading="lazy"></a><figcaption>図：「秘書の分析」を開いたところ。原因・対応の進め方・AIが代わりにできること／人がすること、が出ます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/home-secretary-open.jpg" target="_blank" rel="noopener"><img src="manual-img/home-secretary-open.jpg" alt="今日やること（秘書の提案）。急ぎの順に並び、各項目のボタンで、その場で対応できます。" width="1012" height="950" loading="lazy"></a><figcaption>図：今日やること（秘書の提案）。急ぎの順に並び、各項目のボタンで、その場で対応できます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/home-secretary-detail.jpg" target="_blank" rel="noopener"><img src="manual-img/home-secretary-detail.jpg" alt="「秘書の分析」を開いたところ。原因・対応の進め方・AIが代わりにできること／人がすること、が出ます。" width="974" height="153" loading="lazy"></a><figcaption>図：「秘書の分析」を開いたところ。原因・対応の進め方・AIが代わりにできること／人がすること、が出ます。</figcaption></figure>
 
 <p>タスクのリマインドと現場のアラートを、急ぎの順（高→中→低）に並べます。最大5件を表示し、残りは「ほか○件」と出ます。</p>
 <table><thead><tr><th>見えるもの</th><th>意味</th></tr></thead><tbody>
@@ -243,7 +298,7 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 </tbody></table>
 <div class="box warn"><b class="t">注意</b>「秘書」は人でもAIでもなく、決まった規則で文章を出す仕組みです。規則で拾えない事情（お客様との関係、職人さんの個別の都合）は、人が判断してください。</div>
 <h4>③ 数字のカード4枚（分析期間にそろう）</h4>
-<figure class="shot "><a href="manual-img/home-kpi.jpg" target="_blank" rel="noopener"><img src="manual-img/home-kpi.jpg" alt="数字のカード4枚と、その下の「分析期間：…」の1行。分析期間を変えると、4枚がすべて同じ期間にそろいます。" loading="lazy"></a><figcaption>図：数字のカード4枚と、その下の「分析期間：…」の1行。分析期間を変えると、4枚がすべて同じ期間にそろいます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/home-kpi.jpg" target="_blank" rel="noopener"><img src="manual-img/home-kpi.jpg" alt="数字のカード4枚と、その下の「分析期間：…」の1行。分析期間を変えると、4枚がすべて同じ期間にそろいます。" width="1012" height="180" loading="lazy"></a><figcaption>図：数字のカード4枚と、その下の「分析期間：…」の1行。分析期間を変えると、4枚がすべて同じ期間にそろいます。</figcaption></figure>
 
 <table><thead><tr><th>カード</th><th>見方</th></tr></thead><tbody>
 <tr><td>売上（12月）</td><td>選んだ期間の売上。下に「前年の同じ期間」の金額と、前年比のタグ。右の小さな折れ線は直近の推移</td></tr>
@@ -253,7 +308,7 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 </tbody></table>
 <p>カードの下の1行（<b>分析期間：○○　比較：前年の同じ期間／単位：万円</b>）が、いまの数字の「期間」です。上の「分析期間」ボタンで変えられます。</p>
 <h4>④ 事業カード（リフォーム事業／人材紹介業）</h4>
-<figure class="shot "><a href="manual-img/home-biz.jpg" target="_blank" rel="noopener"><img src="manual-img/home-biz.jpg" alt="事業カード。左がリフォーム事業（薄い水色）、右が人材紹介業（薄い緑）。" loading="lazy"></a><figcaption>図：事業カード。左がリフォーム事業（薄い水色）、右が人材紹介業（薄い緑）。</figcaption></figure>
+<figure class="shot "><a href="manual-img/home-biz.jpg" target="_blank" rel="noopener"><img src="manual-img/home-biz.jpg" alt="事業カード。左がリフォーム事業（薄い水色）、右が人材紹介業（薄い緑）。" width="1012" height="463" loading="lazy"></a><figcaption>図：事業カード。左がリフォーム事業（薄い水色）、右が人材紹介業（薄い緑）。</figcaption></figure>
 
 <ul>
 <li>ロゴ・事業名・説明。色は<b>リフォーム＝薄い水色</b>、<b>人材紹介＝薄い緑</b>で、全ページ共通です。</li>
@@ -268,6 +323,7 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <!-- ===================== 売上分析 ===================== -->
 <section class="chap" id="p-sales">
 <h2>売上分析 <span class="go"><a href="index.html#/sales">画面を開く →</a></span></h2>
+<div class="gist"><span class="tag">ひとことで</span>売上が<b>どの月・どの事業・どの現場</b>から来ているかを見て、計画と比べます。</div>
 <p><b>目的</b>：売上の推移を、前月・前年・計画と比べ、どの事業・どの現場から売上が来ているかを見ます。</p>
 <h3>画面の上から順に</h3>
 <ol>
@@ -279,8 +335,8 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <li><b>月ごとの売上（万円）の表</b>：月ごとの、リフォーム・人材紹介・合計・前月比・前年同月・前年比・計画・計画との差。いちばん下が累計。</li>
 </ol>
 <h3 id="g-chart">グラフ（月次売上と累計売上の推移）の読み方</h3>
-<figure class="shot "><a href="manual-img/sales-chart.jpg" target="_blank" rel="noopener"><img src="manual-img/sales-chart.jpg" alt="月次売上と累計売上の推移。棒は下から資材費（黄）・人件費（赤）・利益（水色）、金色の線が累計、水色の線が利益の累計、緑が計画です。" loading="lazy"></a><figcaption>図：月次売上と累計売上の推移。棒は下から資材費（黄）・人件費（赤）・利益（水色）、金色の線が累計、水色の線が利益の累計、緑が計画です。</figcaption></figure>
-<figure class="shot "><a href="manual-img/sales-chart-tip.jpg" target="_blank" rel="noopener"><img src="manual-img/sales-chart-tip.jpg" alt="棒にマウスを乗せると、その月の内訳（資材費・人件費・利益の金額と割合）、計画との差、累計、前年同月が出ます。" loading="lazy"></a><figcaption>図：棒にマウスを乗せると、その月の内訳（資材費・人件費・利益の金額と割合）、計画との差、累計、前年同月が出ます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/sales-chart.jpg" target="_blank" rel="noopener"><img src="manual-img/sales-chart.jpg" alt="月次売上と累計売上の推移。棒は下から資材費（黄）・人件費（赤）・利益（水色）、金色の線が累計、水色の線が利益の累計、緑が計画です。" width="636" height="609" loading="lazy"></a><figcaption>図：月次売上と累計売上の推移。棒は下から資材費（黄）・人件費（赤）・利益（水色）、金色の線が累計、水色の線が利益の累計、緑が計画です。</figcaption></figure>
+<figure class="shot "><a href="manual-img/sales-chart-tip.jpg" target="_blank" rel="noopener"><img src="manual-img/sales-chart-tip.jpg" alt="棒にマウスを乗せると、その月の内訳（資材費・人件費・利益の金額と割合）、計画との差、累計、前年同月が出ます。" width="636" height="609" loading="lazy"></a><figcaption>図：棒にマウスを乗せると、その月の内訳（資材費・人件費・利益の金額と割合）、計画との差、累計、前年同月が出ます。</figcaption></figure>
 
 <div class="box point"><b class="t">3種類の図形</b>
 <ul>
@@ -297,8 +353,8 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <li>グラフ右上の「売上／原価／利益」（損益分析のみ）で、グラフの数字そのものを切り替えます。原価を選ぶと、棒は資材費と人件費の2色になります。</li>
 </ul>
 <h3 id="g-donut">円グラフ（損益構成）の読み方</h3>
-<figure class="shot "><a href="manual-img/sales-donut.jpg" target="_blank" rel="noopener"><img src="manual-img/sales-donut.jpg" alt="損益構成（事業別）の円グラフ。中央の暗い円の中に、合計と期間が出ます。円の縁の色は、見ている数字（売上＝水色）を表します。" loading="lazy"></a><figcaption>図：損益構成（事業別）の円グラフ。中央の暗い円の中に、合計と期間が出ます。円の縁の色は、見ている数字（売上＝水色）を表します。</figcaption></figure>
-<figure class="shot "><a href="manual-img/sales-donut-profit.jpg" target="_blank" rel="noopener"><img src="manual-img/sales-donut-profit.jpg" alt="「利益」を押したところ。円の縁の色が緑に変わります（事業の色は、そのままです）。" loading="lazy"></a><figcaption>図：「利益」を押したところ。円の縁の色が緑に変わります（事業の色は、そのままです）。</figcaption></figure>
+<figure class="shot "><a href="manual-img/sales-donut.jpg" target="_blank" rel="noopener"><img src="manual-img/sales-donut.jpg" alt="損益構成（事業別）の円グラフ。中央の暗い円の中に、合計と期間が出ます。円の縁の色は、見ている数字（売上＝水色）を表します。" width="360" height="354" loading="lazy"></a><figcaption>図：損益構成（事業別）の円グラフ。中央の暗い円の中に、合計と期間が出ます。円の縁の色は、見ている数字（売上＝水色）を表します。</figcaption></figure>
+<figure class="shot "><a href="manual-img/sales-donut-profit.jpg" target="_blank" rel="noopener"><img src="manual-img/sales-donut-profit.jpg" alt="「利益」を押したところ。円の縁の色が緑に変わります（事業の色は、そのままです）。" width="360" height="354" loading="lazy"></a><figcaption>図：「利益」を押したところ。円の縁の色が緑に変わります（事業の色は、そのままです）。</figcaption></figure>
 
 <ul>
 <li>中央の暗い円の中に、合計の数字と「売上（12月・万円）」のような説明が出ます。円グラフの色が重なっても文字が読めるよう、円の縁と文字に暗い縁取りを付けています。</li>
@@ -306,9 +362,9 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <li>グラフの上の<b>「売上／原価／利益」ボタン</b>で、何の割合を見るかを切り替えます。切り替えると、円の中央の縁の色が変わります（売上＝水色、原価＝黄、利益＝緑）。<b>事業の色そのもの（水色・緑）は変わりません</b>。色と事業の対応を覚えやすくするためです。</li>
 <li>事業ごとの損益分析（リフォーム／人材紹介）の円グラフは、売上に対する<b>資材費（黄）・人件費（赤）・利益（水色）</b>の割合です。右の「資材費」「人件費」「利益」を押すと、その部分だけが色付きで強調され、他は灰色になります。もう一度押すと元に戻ります。</li>
 </ul>
-<figure class="shot "><a href="manual-img/sales-growth.jpg" target="_blank" rel="noopener"><img src="manual-img/sales-growth.jpg" alt="事業ごとの伸び。選んだ期間の売上、計画達成率（棒）、前年の同じ期間比。" loading="lazy"></a><figcaption>図：事業ごとの伸び。選んだ期間の売上、計画達成率（棒）、前年の同じ期間比。</figcaption></figure>
+<figure class="shot "><a href="manual-img/sales-growth.jpg" target="_blank" rel="noopener"><img src="manual-img/sales-growth.jpg" alt="事業ごとの伸び。選んだ期間の売上、計画達成率（棒）、前年の同じ期間比。" width="360" height="240" loading="lazy"></a><figcaption>図：事業ごとの伸び。選んだ期間の売上、計画達成率（棒）、前年の同じ期間比。</figcaption></figure>
 <h3 id="g-money">現場ごとの収支（リフォーム事業）</h3>
-<figure class="shot "><a href="manual-img/sales-money.jpg" target="_blank" rel="noopener"><img src="manual-img/sales-money.jpg" alt="現場ごとの収支。上の6つの箱が全体のまとめ、下の表が月ごとの現場数と収支です。さらに下に、現場ごとの一覧があります。" loading="lazy"></a><figcaption>図：現場ごとの収支。上の6つの箱が全体のまとめ、下の表が月ごとの現場数と収支です。さらに下に、現場ごとの一覧があります。</figcaption></figure>
+<figure class="shot "><a href="manual-img/sales-money.jpg" target="_blank" rel="noopener"><img src="manual-img/sales-money.jpg" alt="現場ごとの収支。上の6つの箱が全体のまとめ、下の表が月ごとの現場数と収支です。さらに下に、現場ごとの一覧があります。" width="1012" height="1464" loading="lazy"></a><figcaption>図：現場ごとの収支。上の6つの箱が全体のまとめ、下の表が月ごとの現場数と収支です。さらに下に、現場ごとの一覧があります。</figcaption></figure>
 
 <p>1つの現場がいくら売上になり、いくらかかり、いくら儲かっているかを見る表です。<b>売上は「契約額 × 進み具合」の出来高</b>、<b>コストは、これまでにかかった実績</b>です。</p>
 <table><thead><tr><th>列</th><th>意味</th></tr></thead><tbody>
@@ -329,8 +385,9 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <!-- ===================== 損益分析 ===================== -->
 <section class="chap" id="p-pl">
 <h2>損益分析 <span class="go"><a href="index.html#/pl">画面を開く →</a></span></h2>
+<div class="gist"><span class="tag">ひとことで</span>売上から原価（資材費・人件費）を引いた<b>利益</b>を見ます。原価が高い原因も、内訳で分かります。</div>
 <p><b>場所</b>：左メニューの「損益分析」。その下の「リフォーム事業」「人材紹介業」を押すと、事業ごとに絞れます（ページ上の3つのタブでも切り替えできます）。<b>目的</b>：売上・原価（資材費と人件費）・利益を、計画や目標と比べます。</p>
-<figure class="shot "><a href="manual-img/pl-top.jpg" target="_blank" rel="noopener"><img src="manual-img/pl-top.jpg" alt="損益分析（全事業）の上の部分。上のタブで、リフォーム事業・人材紹介業に絞れます。" loading="lazy"></a><figcaption>図：損益分析（全事業）の上の部分。上のタブで、リフォーム事業・人材紹介業に絞れます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/pl-top.jpg" target="_blank" rel="noopener"><img src="manual-img/pl-top.jpg" alt="損益分析（全事業）の上の部分。上のタブで、リフォーム事業・人材紹介業に絞れます。" width="1080" height="860" loading="lazy"></a><figcaption>図：損益分析（全事業）の上の部分。上のタブで、リフォーム事業・人材紹介業に絞れます。</figcaption></figure>
 
 <h3>画面の上から順に</h3>
 <ol>
@@ -342,12 +399,12 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <li><b>目標値に対する進捗</b>：<b>年間の目標</b>に対する累計の進み。金色の印＝「計画どおりなら、いまここ」。「このペースの年間見込み」と目標との差も出ます。</li>
 <li>下に<b>AIインサイト</b>（気づきの抜粋）。</li>
 </ol>
-<figure class="shot "><a href="manual-img/pl-compare.jpg" target="_blank" rel="noopener"><img src="manual-img/pl-compare.jpg" alt="主要指標の比較。売上を100%とした横棒で、資材費・人件費・利益を比べます。" loading="lazy"></a><figcaption>図：主要指標の比較。売上を100%とした横棒で、資材費・人件費・利益を比べます。</figcaption></figure>
-<figure class="shot "><a href="manual-img/pl-cost.jpg" target="_blank" rel="noopener"><img src="manual-img/pl-cost.jpg" alt="原価の内訳。計画の原価率・前年の原価率と並べて見られます。" loading="lazy"></a><figcaption>図：原価の内訳。計画の原価率・前年の原価率と並べて見られます。</figcaption></figure>
-<figure class="shot "><a href="manual-img/pl-goal.jpg" target="_blank" rel="noopener"><img src="manual-img/pl-goal.jpg" alt="目標値に対する進捗。金色の印が「計画どおりなら、いまここ」の位置です。" loading="lazy"></a><figcaption>図：目標値に対する進捗。金色の印が「計画どおりなら、いまここ」の位置です。</figcaption></figure>
-<figure class="shot "><a href="manual-img/pl-reform-donut.jpg" target="_blank" rel="noopener"><img src="manual-img/pl-reform-donut.jpg" alt="リフォーム事業の損益構成。売上に対する資材費（黄）・人件費（赤）・利益（水色）の割合です。" loading="lazy"></a><figcaption>図：リフォーム事業の損益構成。売上に対する資材費（黄）・人件費（赤）・利益（水色）の割合です。</figcaption></figure>
-<figure class="shot "><a href="manual-img/pl-reform-donut-lab.jpg" target="_blank" rel="noopener"><img src="manual-img/pl-reform-donut-lab.jpg" alt="右の「人件費」を押したところ。その部分だけが色付きで強調され、ほかは灰色になります。もう一度押すと元に戻ります。" loading="lazy"></a><figcaption>図：右の「人件費」を押したところ。その部分だけが色付きで強調され、ほかは灰色になります。もう一度押すと元に戻ります。</figcaption></figure>
-<figure class="shot "><a href="manual-img/pl-cost-tip.jpg" target="_blank" rel="noopener"><img src="manual-img/pl-cost-tip.jpg" alt="グラフを「原価」に切り替え、棒に乗せたところ。資材費と人件費の内訳が出ます。" loading="lazy"></a><figcaption>図：グラフを「原価」に切り替え、棒に乗せたところ。資材費と人件費の内訳が出ます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/pl-compare.jpg" target="_blank" rel="noopener"><img src="manual-img/pl-compare.jpg" alt="主要指標の比較。売上を100%とした横棒で、資材費・人件費・利益を比べます。" width="360" height="557" loading="lazy"></a><figcaption>図：主要指標の比較。売上を100%とした横棒で、資材費・人件費・利益を比べます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/pl-cost.jpg" target="_blank" rel="noopener"><img src="manual-img/pl-cost.jpg" alt="原価の内訳。計画の原価率・前年の原価率と並べて見られます。" width="498" height="431" loading="lazy"></a><figcaption>図：原価の内訳。計画の原価率・前年の原価率と並べて見られます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/pl-goal.jpg" target="_blank" rel="noopener"><img src="manual-img/pl-goal.jpg" alt="目標値に対する進捗。金色の印が「計画どおりなら、いまここ」の位置です。" width="498" height="431" loading="lazy"></a><figcaption>図：目標値に対する進捗。金色の印が「計画どおりなら、いまここ」の位置です。</figcaption></figure>
+<figure class="shot "><a href="manual-img/pl-reform-donut.jpg" target="_blank" rel="noopener"><img src="manual-img/pl-reform-donut.jpg" alt="リフォーム事業の損益構成。売上に対する資材費（黄）・人件費（赤）・利益（水色）の割合です。" width="360" height="349" loading="lazy"></a><figcaption>図：リフォーム事業の損益構成。売上に対する資材費（黄）・人件費（赤）・利益（水色）の割合です。</figcaption></figure>
+<figure class="shot "><a href="manual-img/pl-reform-donut-lab.jpg" target="_blank" rel="noopener"><img src="manual-img/pl-reform-donut-lab.jpg" alt="右の「人件費」を押したところ。その部分だけが色付きで強調され、ほかは灰色になります。もう一度押すと元に戻ります。" width="360" height="349" loading="lazy"></a><figcaption>図：右の「人件費」を押したところ。その部分だけが色付きで強調され、ほかは灰色になります。もう一度押すと元に戻ります。</figcaption></figure>
+<figure class="shot "><a href="manual-img/pl-cost-tip.jpg" target="_blank" rel="noopener"><img src="manual-img/pl-cost-tip.jpg" alt="グラフを「原価」に切り替え、棒に乗せたところ。資材費と人件費の内訳が出ます。" width="636" height="921" loading="lazy"></a><figcaption>図：グラフを「原価」に切り替え、棒に乗せたところ。資材費と人件費の内訳が出ます。</figcaption></figure>
 <div class="box point"><b class="t">「分析期間」と「年間目標」の違い</b>カードや円グラフ・比較・内訳は、<b>選んだ分析期間（単月／直近3か月／年累計）</b>の数字です。「目標値に対する進捗」だけは、<b>常に期初からの累計と年間の目標</b>を比べています。期間の名前は、それぞれのカードの下の注記に書いてあります。</div>
 <div class="box eff"><b class="t">管理できること</b>原価率が計画より高い月を見つけ、資材費と人件費のどちらが原因かを内訳から判断できます。事業ごとのタブで、リフォームと人材紹介の儲けの違いを比べられます。</div>
 </section>
@@ -355,6 +412,7 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <!-- ===================== タスク ===================== -->
 <section class="chap" id="p-tasks">
 <h2>タスク（ページと、右下のタブ） <span class="go"><a href="index.html#/tasks">画面を開く →</a></span></h2>
+<div class="gist"><span class="tag">ひとことで</span><b>「人に頼む」</b>と<b>「自分のやること」</b>を1か所で管理します。頼みっぱなし・やりっぱなしを防ぎます。</div>
 <p><b>目的</b>：「人に頼んだこと」「自分のやること」を、頼む→受ける→進める→報告→確認、の流れで管理します。頼みっぱなし・やりっぱなしを防ぎます。</p>
 <h3>基本の流れ</h3>
 <ol class="step">
@@ -366,7 +424,7 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <li>2日たっても報告が来ないと、頼んだ人に<b>リマインド</b>が出ます。<span class="btn">催促する</span>を押すと、相手に「催促あり」が付きます。</li>
 </ol>
 <h3>ページの上から順に</h3>
-<figure class="shot "><a href="manual-img/tasks-top.jpg" target="_blank" rel="noopener"><img src="manual-img/tasks-top.jpg" alt="タスクのページ。上から、見る人の切り替え、数字の箱、リマインド、追加の入口、タブ、一覧。" loading="lazy"></a><figcaption>図：タスクのページ。上から、見る人の切り替え、数字の箱、リマインド、追加の入口、タブ、一覧。</figcaption></figure>
+<figure class="shot "><a href="manual-img/tasks-top.jpg" target="_blank" rel="noopener"><img src="manual-img/tasks-top.jpg" alt="タスクのページ。上から、見る人の切り替え、数字の箱、リマインド、追加の入口、タブ、一覧。" width="1080" height="860" loading="lazy"></a><figcaption>図：タスクのページ。上から、見る人の切り替え、数字の箱、リマインド、追加の入口、タブ、一覧。</figcaption></figure>
 
 <table><thead><tr><th>場所</th><th>内容</th></tr></thead><tbody>
 <tr><td>いま見ている人</td><td><b>見本用</b>の切り替え。「代表」「担当A」…を選ぶと、その人の画面になります。依頼する側・受ける側の両方を1つの画面で試せます。本番では、ログインした本人の専用ページになります。</td></tr>
@@ -376,7 +434,7 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <tr><td>3つのタブ</td><td>自分のタスク／預けているタスク／完了。件数付き</td></tr>
 </tbody></table>
 <h3>1件のタスクの見かた</h3>
-<figure class="shot "><a href="manual-img/tasks-card.jpg" target="_blank" rel="noopener"><img src="manual-img/tasks-card.jpg" alt="1件のタスク。大きな文字がタスク名、小項目のチェックで進み具合（％）が自動で変わります。メモ欄にその場で書けます。" loading="lazy"></a><figcaption>図：1件のタスク。大きな文字がタスク名、小項目のチェックで進み具合（％）が自動で変わります。メモ欄にその場で書けます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/tasks-card.jpg" target="_blank" rel="noopener"><img src="manual-img/tasks-card.jpg" alt="1件のタスク。大きな文字がタスク名、小項目のチェックで進み具合（％）が自動で変わります。メモ欄にその場で書けます。" width="974" height="495" loading="lazy"></a><figcaption>図：1件のタスク。大きな文字がタスク名、小項目のチェックで進み具合（％）が自動で変わります。メモ欄にその場で書けます。</figcaption></figure>
 
 <ul>
 <li><b>大きな文字</b>：タスクの内容。</li>
@@ -387,8 +445,8 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <li>ボタン：状況に応じて、<span class="btn">受け取りました</span>／<span class="btn">報告する</span>／<span class="btn">完了にする</span>（自分のタスク）／<span class="btn">確認して完了にする</span>／<span class="btn">差し戻す</span>／<span class="btn">催促する</span>。</li>
 </ul>
 <h3>タスクを追加する（頼む／自分）</h3>
-<figure class="shot "><a href="manual-img/tasks-add-choice.jpg" target="_blank" rel="noopener"><img src="manual-img/tasks-add-choice.jpg" alt="「＋ 頼む／自分のタスクを追加」を押したところ。「人に頼む」か「自分のタスクを追加する」を選びます。" loading="lazy"></a><figcaption>図：「＋ 頼む／自分のタスクを追加」を押したところ。「人に頼む」か「自分のタスクを追加する」を選びます。</figcaption></figure>
-<figure class="shot "><a href="manual-img/tasks-add-ask.jpg" target="_blank" rel="noopener"><img src="manual-img/tasks-add-ask.jpg" alt="「人に頼む」のフォーム。内容・誰に・期限・小項目（欄を足せます）・関係する案件を入れます。" loading="lazy"></a><figcaption>図：「人に頼む」のフォーム。内容・誰に・期限・小項目（欄を足せます）・関係する案件を入れます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/tasks-add-choice.jpg" target="_blank" rel="noopener"><img src="manual-img/tasks-add-choice.jpg" alt="「＋ 頼む／自分のタスクを追加」を押したところ。「人に頼む」か「自分のタスクを追加する」を選びます。" width="1012" height="304" loading="lazy"></a><figcaption>図：「＋ 頼む／自分のタスクを追加」を押したところ。「人に頼む」か「自分のタスクを追加する」を選びます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/tasks-add-ask.jpg" target="_blank" rel="noopener"><img src="manual-img/tasks-add-ask.jpg" alt="「人に頼む」のフォーム。内容・誰に・期限・小項目（欄を足せます）・関係する案件を入れます。" width="1012" height="544" loading="lazy"></a><figcaption>図：「人に頼む」のフォーム。内容・誰に・期限・小項目（欄を足せます）・関係する案件を入れます。</figcaption></figure>
 
 <p>ページの「＋ 頼む／自分のタスクを追加」、または右下タブの「＋」を押します。</p>
 <table><thead><tr><th>選ぶもの</th><th>入力する項目</th><th>結果</th></tr></thead><tbody>
@@ -397,8 +455,8 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 </tbody></table>
 <p>「戻る」で選び直し、「やめる」で閉じます。内容が空のときは、日本語のエラー文が出て、追加されません。</p>
 <h3>右下の「タスク」タブ（どのページでも使える小さな画面）</h3>
-<figure class="shot "><a href="manual-img/dock-open.jpg" target="_blank" rel="noopener"><img src="manual-img/dock-open.jpg" alt="右下の「タスク」ボタンを押して開いた小さな画面。①の「＋」でタスクを頼む／追加、②の「閉じる」で閉じます。" loading="lazy"></a><figcaption>図：右下の「タスク」ボタンを押して開いた小さな画面。①の「＋」でタスクを頼む／追加、②の「閉じる」で閉じます。</figcaption></figure>
-<figure class="shot "><a href="manual-img/dock-choice.jpg" target="_blank" rel="noopener"><img src="manual-img/dock-choice.jpg" alt="小さな画面の「＋」を押したところ。ここから、そのまま頼む／追加できます。" loading="lazy"></a><figcaption>図：小さな画面の「＋」を押したところ。ここから、そのまま頼む／追加できます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/dock-open.jpg" target="_blank" rel="noopener"><img src="manual-img/dock-open.jpg" alt="右下の「タスク」ボタンを押して開いた小さな画面。①の「＋」でタスクを頼む／追加、②の「閉じる」で閉じます。" width="1280" height="860" loading="lazy"></a><figcaption>図：右下の「タスク」ボタンを押して開いた小さな画面。①の「＋」でタスクを頼む／追加、②の「閉じる」で閉じます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/dock-choice.jpg" target="_blank" rel="noopener"><img src="manual-img/dock-choice.jpg" alt="小さな画面の「＋」を押したところ。ここから、そのまま頼む／追加できます。" width="420" height="671" loading="lazy"></a><figcaption>図：小さな画面の「＋」を押したところ。ここから、そのまま頼む／追加できます。</figcaption></figure>
 
 <ul>
 <li>ボタンの数字＝対応が必要なお知らせの数。押すと画面が開きます。</li>
@@ -412,10 +470,11 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <!-- ===================== 案件管理 ===================== -->
 <section class="chap" id="p-cases">
 <h2>案件管理 <span class="go"><a href="index.html#/cases">画面を開く →</a></span></h2>
+<div class="gist"><span class="tag">ひとことで</span>お客様の工事の話（案件）の一覧と、<b>商談の記録</b>。断られた理由も数字で残ります。</div>
 <p><b>案件</b>とは、お客様から受けた1件の工事の話です（見積りの段階から、受注・施工・請求・入金・失注まで）。<b>目的</b>：案件の一覧・金額・状況と、商談の記録をまとめて管理します。ページ上のタブで「案件の一覧」と「商談記録」を切り替えます。</p>
 <h3>タブ「案件の一覧」</h3>
-<figure class="shot "><a href="manual-img/cases-top.jpg" target="_blank" rel="noopener"><img src="manual-img/cases-top.jpg" alt="案件管理（案件の一覧）の上の部分。入口のボタン、数字の箱、状況ごとの金額の帯。" loading="lazy"></a><figcaption>図：案件管理（案件の一覧）の上の部分。入口のボタン、数字の箱、状況ごとの金額の帯。</figcaption></figure>
-<figure class="shot "><a href="manual-img/cases-list.jpg" target="_blank" rel="noopener"><img src="manual-img/cases-list.jpg" alt="案件の一覧。絞り込みと、「詳細」ボタン、粗利（円）の入力欄があります。" loading="lazy"></a><figcaption>図：案件の一覧。絞り込みと、「詳細」ボタン、粗利（円）の入力欄があります。</figcaption></figure>
+<figure class="shot "><a href="manual-img/cases-top.jpg" target="_blank" rel="noopener"><img src="manual-img/cases-top.jpg" alt="案件管理（案件の一覧）の上の部分。入口のボタン、数字の箱、状況ごとの金額の帯。" width="1080" height="860" loading="lazy"></a><figcaption>図：案件管理（案件の一覧）の上の部分。入口のボタン、数字の箱、状況ごとの金額の帯。</figcaption></figure>
+<figure class="shot "><a href="manual-img/cases-list.jpg" target="_blank" rel="noopener"><img src="manual-img/cases-list.jpg" alt="案件の一覧。絞り込みと、「詳細」ボタン、粗利（円）の入力欄があります。" width="1012" height="1223" loading="lazy"></a><figcaption>図：案件の一覧。絞り込みと、「詳細」ボタン、粗利（円）の入力欄があります。</figcaption></figure>
 
 <ol>
 <li><b>入口のボタン2つ</b>：<span class="btn">＋ 案件を追加する（手入力）</span>／<span class="btn">🎙 商談を記録する（音声・手入力）</span>。</li>
@@ -431,18 +490,18 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <h4>案件を追加する（手入力）</h4>
 <ol class="step"><li>「＋ 案件を追加する（手入力）」を押す。</li><li>物件名（必須）・担当者・元請け・受注額（円）・売上月・状況・備考を入れる。</li><li>「この案件を追加」を押す。一覧と集計にすぐ反映されます。物件名が空だと日本語のエラーが出ます。</li></ol>
 <h4>案件の「詳細」</h4>
-<figure class="shot "><a href="manual-img/cases-detail.jpg" target="_blank" rel="noopener"><img src="manual-img/cases-detail.jpg" alt="「詳細」を押した画面。受付・現地調査／契約と、その案件の商談記録を入力・確認できます。" loading="lazy"></a><figcaption>図：「詳細」を押した画面。受付・現地調査／契約と、その案件の商談記録を入力・確認できます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/cases-detail.jpg" target="_blank" rel="noopener"><img src="manual-img/cases-detail.jpg" alt="「詳細」を押した画面。受付・現地調査／契約と、その案件の商談記録を入力・確認できます。" width="1012" height="1037" loading="lazy"></a><figcaption>図：「詳細」を押した画面。受付・現地調査／契約と、その案件の商談記録を入力・確認できます。</figcaption></figure>
 
 <p>表の<span class="btn">詳細</span>を押すと、その案件の<b>受付・商談・契約</b>の詳細が開きます。</p>
 <ul>
 <li><b>1. 受付・現地調査／契約</b>：要望（現地調査・ヒアリングで聞いたこと）、契約書／発注書の状況などを入力・確認します。</li>
 <li><b>2. 商談記録</b>：この案件の商談。「商談の日・参加した人・記録のもと・商談の内容（メモや文字起こしの貼り付け）・結果」を残せます。</li>
-<li><b>叩き台</b>：商談の内容から作る見積の下書き。<span class="btn">内容から叩き台を作る</span>→担当者が直してから<span class="btn">この叩き台で見積を作る</span>で、見積もり作成へ進みます。<b>AIではなく、決まった規則で拾った下書き</b>です。必ず人が直してください。</li>
+<li><b>叩き台</b>：商談の内容から作る見積の下書き。<span class="btn">内容から叩き台を作る</span>→担当者が直してから<span class="btn">この叩き台で見積を作る</span>で、見積もり作成へ進みます。<span class="imp">AIではなく、決まった規則で拾った下書き</span>です。必ず人が直してください。</li>
 </ul>
 <h3>タブ「商談記録」</h3>
-<figure class="shot "><a href="manual-img/talks-top.jpg" target="_blank" rel="noopener"><img src="manual-img/talks-top.jpg" alt="商談記録のタブ。商談の件数、案件になった率、受注・失注の数字が出ます。" loading="lazy"></a><figcaption>図：商談記録のタブ。商談の件数、案件になった率、受注・失注の数字が出ます。</figcaption></figure>
-<figure class="shot "><a href="manual-img/talks-cloud.jpg" target="_blank" rel="noopener"><img src="manual-img/talks-cloud.jpg" alt="音声データ（Plaud）の取り込み（見本の受信箱）。実際の連携は、まだつないでいません。" loading="lazy"></a><figcaption>図：音声データ（Plaud）の取り込み（見本の受信箱）。実際の連携は、まだつないでいません。</figcaption></figure>
-<figure class="shot "><a href="manual-img/talks-form.jpg" target="_blank" rel="noopener"><img src="manual-img/talks-form.jpg" alt="商談を記録するフォーム。音声入力は、同意のチェックを入れたときだけ使えます。" loading="lazy"></a><figcaption>図：商談を記録するフォーム。音声入力は、同意のチェックを入れたときだけ使えます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/talks-top.jpg" target="_blank" rel="noopener"><img src="manual-img/talks-top.jpg" alt="商談記録のタブ。商談の件数、案件になった率、受注・失注の数字が出ます。" width="1080" height="860" loading="lazy"></a><figcaption>図：商談記録のタブ。商談の件数、案件になった率、受注・失注の数字が出ます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/talks-cloud.jpg" target="_blank" rel="noopener"><img src="manual-img/talks-cloud.jpg" alt="音声データ（Plaud）の取り込み（見本の受信箱）。実際の連携は、まだつないでいません。" width="1012" height="357" loading="lazy"></a><figcaption>図：音声データ（Plaud）の取り込み（見本の受信箱）。実際の連携は、まだつないでいません。</figcaption></figure>
+<figure class="shot "><a href="manual-img/talks-form.jpg" target="_blank" rel="noopener"><img src="manual-img/talks-form.jpg" alt="商談を記録するフォーム。音声入力は、同意のチェックを入れたときだけ使えます。" width="1012" height="887" loading="lazy"></a><figcaption>図：商談を記録するフォーム。音声入力は、同意のチェックを入れたときだけ使えます。</figcaption></figure>
 
 <p>商談（お客様と話したこと）の記録と、そこから受注・失注までの見える化です。</p>
 <ol>
@@ -452,7 +511,7 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <li><b>商談を記録する</b>（入力フォーム）：いつ／時間／どこで／誰と（相手）／自社の担当／発注の形／元請け・発注元の名前／物件名／何を話したか（<b>音声入力</b>・文字起こしの貼り付け・手入力）／商談の結果（案件になったか）／見込みの金額／案件にならなかった理由。</li>
 </ol>
 <table><thead><tr><th>ボタン</th><th>効果</th></tr></thead><tbody>
-<tr><td><span class="btn">🎙 音声で入力する</span></td><td>話した内容を文字にします。<b>先に「音声入力を使うことに同意します」にチェック</b>が必要です。録音した音声は、お使いのブラウザの会社の音声認識サービス（クラウド）に送られるため、お客様の同意を得てから使ってください。使えないブラウザでは、日本語のお知らせが出ます。</td></tr>
+<tr><td><span class="btn">🎙 音声で入力する</span></td><td>話した内容を文字にします。<span class="imp">先に「音声入力を使うことに同意します」にチェック</span>が必要です。録音した音声は、お使いのブラウザの会社の音声認識サービス（クラウド）に送られるため、お客様の同意を得てから使ってください。使えないブラウザでは、日本語のお知らせが出ます。</td></tr>
 <tr><td><span class="btn">内容を整理する（担当・相手・元請け・予算・要望）</span></td><td>書いた内容から、担当・相手・元請け・予算・要望を規則で拾って入力欄に入れます。直してから使います。</td></tr>
 <tr><td><span class="btn">サンプルの見積もりを作る</span></td><td>内容から見積の叩き台を作り、見積もり作成のページへ移ります。</td></tr>
 <tr><td><span class="btn">商談を記録する</span></td><td>商談を保存します（案件になる場合は案件も作ります）。</td></tr>
@@ -464,15 +523,16 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <!-- ===================== 現場進捗状況 ===================== -->
 <section class="chap" id="p-sites">
 <h2>現場進捗状況 <span class="go"><a href="index.html#/sites">画面を開く →</a></span></h2>
+<div class="gist"><span class="tag">ひとことで</span>全現場の<b>進み具合と遅れ</b>を一目で確認。日報・資材の発注・職人の返事の<b>抜け漏れ</b>を早く見つけます。</div>
 <p><b>目的</b>：全現場の進み具合と遅れを一目で見て、抜け漏れ（日報・資材発注・職人の確認・着工前の準備・契約）を早く見つけます。ページ上のタブ「全現場の状況」「現場の詳細（工程表・日報・写真）」「職人の確認ページ →」で切り替えます。</p>
 
 <h3>タブ「全現場の状況」</h3>
-<figure class="shot "><a href="manual-img/sites-top.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-top.jpg" alt="現場進捗状況（全現場の状況）の上の部分。数字の箱と、全案件のガントチャート。" loading="lazy"></a><figcaption>図：現場進捗状況（全現場の状況）の上の部分。数字の箱と、全案件のガントチャート。</figcaption></figure>
+<figure class="shot "><a href="manual-img/sites-top.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-top.jpg" alt="現場進捗状況（全現場の状況）の上の部分。数字の箱と、全案件のガントチャート。" width="1080" height="860" loading="lazy"></a><figcaption>図：現場進捗状況（全現場の状況）の上の部分。数字の箱と、全案件のガントチャート。</figcaption></figure>
 
 <h4>① 数字のカード4枚</h4>
 <p>工程表のある現場／計画より遅れている現場／対応が必要なアラート／今日の日報（施工中の現場）。</p>
 <h4>② 全案件の進み具合（ガントチャート）</h4>
-<figure class="shot "><a href="manual-img/sites-gantt.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-gantt.jpg" alt="全案件のガントチャート。緑の縦線が今日。棒の色は状態、右の丸いマークは「要確認」のしるしです。" loading="lazy"></a><figcaption>図：全案件のガントチャート。緑の縦線が今日。棒の色は状態、右の丸いマークは「要確認」のしるしです。</figcaption></figure>
+<figure class="shot "><a href="manual-img/sites-gantt.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-gantt.jpg" alt="全案件のガントチャート。緑の縦線が今日。棒の色は状態、右の丸いマークは「要確認」のしるしです。" width="974" height="1157" loading="lazy"></a><figcaption>図：全案件のガントチャート。緑の縦線が今日。棒の色は状態、右の丸いマークは「要確認」のしるしです。</figcaption></figure>
 
 <p>1本が1案件の工程です。横軸は日付（週ごとの目盛り）、<b>緑の縦線が「今日」</b>です。絞り込み：状況／担当者／表示する期間（全期間／今日の前後）。</p>
 <ul>
@@ -484,7 +544,7 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <tr><td>水色の枠</td><td>進行中</td></tr><tr><td>緑の枠</td><td>完了</td></tr><tr><td>黄色の枠</td><td>遅れ気味（予定の進み具合より15ポイント以上少ない）</td></tr><tr><td>赤い枠</td><td>遅れ（予定の終了日を過ぎている）</td></tr><tr><td>灰色の枠</td><td>未着手</td></tr>
 </tbody></table>
 <h4>棒の操作と動き</h4>
-<figure class="shot "><a href="manual-img/sites-gantt-tip.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-gantt-tip.jpg" alt="棒に乗せたところ。進み具合の根拠（予定との差・最後の日報・職人・要確認の項目）が出ます。" loading="lazy"></a><figcaption>図：棒に乗せたところ。進み具合の根拠（予定との差・最後の日報・職人・要確認の項目）が出ます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/sites-gantt-tip.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-gantt-tip.jpg" alt="棒に乗せたところ。進み具合の根拠（予定との差・最後の日報・職人・要確認の項目）が出ます。" width="1280" height="860" loading="lazy"></a><figcaption>図：棒に乗せたところ。進み具合の根拠（予定との差・最後の日報・職人・要確認の項目）が出ます。</figcaption></figure>
 
 <ul>
 <li><b>棒にマウスを乗せる／押す／Tabキーで移動</b>：小さな吹き出しが出て、<b>進み具合の根拠</b>が見られます：日程（全○日・○日目）／進み具合○％（予定○％との差・ポイント）／最後の日報の日付・書いた人・内容／職人（確認済みか）／資材の件数（未発注の数）／要確認の項目。スマホでは、棒を押すと出て、もう一度押すと閉じます。Esc キーでも閉じます。</li>
@@ -502,7 +562,7 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 </tbody></table>
 <p>赤は「急ぎ」、黄は「早めに確認」です。マークにマウスを乗せると、理由が出ます。マークは、<b>いま動いている工程</b>に付きます。</p>
 <h4>③ アラート（抜け漏れ・遅れ）</h4>
-<figure class="shot "><a href="manual-img/sites-alerts.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-alerts.jpg" alt="アラートの一覧。各項目の「現場を見る」「確認済みにする」で、その場で対応できます。" loading="lazy"></a><figcaption>図：アラートの一覧。各項目の「現場を見る」「確認済みにする」で、その場で対応できます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/sites-alerts.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-alerts.jpg" alt="アラートの一覧。各項目の「現場を見る」「確認済みにする」で、その場で対応できます。" width="1012" height="891" loading="lazy"></a><figcaption>図：アラートの一覧。各項目の「現場を見る」「確認済みにする」で、その場で対応できます。</figcaption></figure>
 
 <p>上位6件を表示。<span class="btn">現場を見る</span>でその現場へ、<span class="btn">確認済みにする</span>でその日の通知を隠せます。</p>
 <table><thead><tr><th>アラートの種類</th><th>どんなときに出るか</th></tr></thead><tbody>
@@ -516,7 +576,7 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <p>現場・担当・いま何をしているか・どこまで・計画との比較・最新の日報・追加変更工事・アラート数。着工前の案件は、見積り・契約の段階のものの一覧です。</p>
 
 <h3>タブ「現場の詳細（工程表・日報・写真）」</h3>
-<figure class="shot "><a href="manual-img/sites-detail-top.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-detail-top.jpg" alt="現場の詳細。上から、現場の見出し、いま／どこまで／次／追加・変更工事の箱、工程の流れ、着工前チェック。" loading="lazy"></a><figcaption>図：現場の詳細。上から、現場の見出し、いま／どこまで／次／追加・変更工事の箱、工程の流れ、着工前チェック。</figcaption></figure>
+<figure class="shot "><a href="manual-img/sites-detail-top.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-detail-top.jpg" alt="現場の詳細。上から、現場の見出し、いま／どこまで／次／追加・変更工事の箱、工程の流れ、着工前チェック。" width="1080" height="860" loading="lazy"></a><figcaption>図：現場の詳細。上から、現場の見出し、いま／どこまで／次／追加・変更工事の箱、工程の流れ、着工前チェック。</figcaption></figure>
 
 <p>上の「現場」の選択で、1つの現場を選びます。上から順に：</p>
 <ol>
@@ -530,28 +590,29 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <li><b>日報・写真を上げる</b>：現場・日付・書いた人・写真（複数可）・日報・「追加・変更工事が出た」のチェックと内容・承認の状況。<span class="btn">日報を上げる</span>で保存。</li>
 <li><b>この現場のメモ</b>／<b>日報・写真の記録</b>：追加・変更工事は「未承認」のときに<b>承認</b>ボタンで承認済みにします。</li>
 </ol>
-<figure class="shot "><a href="manual-img/sites-detail-gantt.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-detail-gantt.jpg" alt="工程表（進捗）。棒の左の丸は、資材の発注の期限の日です。下の表で、進み具合を入力できます。" loading="lazy"></a><figcaption>図：工程表（進捗）。棒の左の丸は、資材の発注の期限の日です。下の表で、進み具合を入力できます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/sites-detail-gantt.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-detail-gantt.jpg" alt="工程表（進捗）。棒の左の丸は、資材の発注の期限の日です。下の表で、進み具合を入力できます。" width="1012" height="916" loading="lazy"></a><figcaption>図：工程表（進捗）。棒の左の丸は、資材の発注の期限の日です。下の表で、進み具合を入力できます。</figcaption></figure>
 <h4 id="g-order">資材の発注（発注するもの）の考え方と操作</h4>
-<figure class="shot "><a href="manual-img/sites-orders.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-orders.jpg" alt="発注するもの（資材・材料）。発注の期限・残り日数・状況が並び、発注したらチェックを入れます。" loading="lazy"></a><figcaption>図：発注するもの（資材・材料）。発注の期限・残り日数・状況が並び、発注したらチェックを入れます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/sites-orders.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-orders.jpg" alt="発注するもの（資材・材料）。発注の期限・残り日数・状況が並び、発注したらチェックを入れます。" width="1012" height="577" loading="lazy"></a><figcaption>図：発注するもの（資材・材料）。発注の期限・残り日数・状況が並び、発注したらチェックを入れます。</figcaption></figure>
 
-<div class="box point"><b class="t">発注の期限の決め方</b>納品は、早すぎると現場の邪魔になるので、<b>着工の前日</b>に合わせます。<br><b>発注の期限 ＝ 着工の前日 −「頼んでから届くまでの日数」</b>。工程の日程がずれると、期限も自動で動きます。</div>
+<div class="box point"><b class="t">発注の期限の決め方</b>納品は、早すぎると現場の邪魔になるので、<b>着工の前日</b>に合わせます。<br><span class="imp">発注の期限 ＝ 着工の前日 −「頼んでから届くまでの日数」</span>。工程の日程がずれると、期限も自動で動きます。</div>
 <ul>
 <li>一覧の列：<b>発注済み</b>（チェック）／品名／工程（着工日）／数量／<b>納品の必要日</b>／<b>発注の期限</b>（届くまでの日数）／状況／（足したものだけ）消す。</li>
 <li>状況：<span class="chip c-hi">間に合っていません（○日過ぎ）</span> ／ <span class="chip c-mid">あと○日・今日が期限</span> ／まだ先 ／ <span class="chip c-ok">発注済み</span>。上の小さな件数表示（間に合っていない・期限が近い・まだ先・発注済み）で全体が分かります。</li>
-<li><b>発注したら、必ず「発注済み」にチェック</b>を入れます。チェックするとアラートが消え、棒の横の丸が緑の ✓ になります。間違えたら、もう一度押すと元に戻ります。</li>
+<li><span class="imp">発注したら、必ず「発注済み」にチェック</span>を入れます。チェックするとアラートが消え、棒の横の丸が緑の ✓ になります。間違えたら、もう一度押すと元に戻ります。</li>
 <li>工程表の丸は<b>1工程に1つ</b>です。「発」＝まだ先、「!」＝期限が近い・過ぎた、「✓」＝すべて発注済み。数字（例「✓2」）は、その工程の資材の件数です。押す（乗せる）と、品名ごとの期限と状況が出ます。</li>
 <li>追加：「発注するものを足す」を開き、使う工程・品名・数量・単位・頼んでから届くまでの日数を入れて<span class="btn">発注するものに足す</span>。</li>
 <li>アラートは、<b>期限の5日前</b>から出ます（遅すぎる発注も、早すぎる発注も防ぐため、早い時期は知らせません）。過ぎている＝高、あと1日以内＝中、2〜5日＝低。</li>
 </ul>
-<figure class="shot "><a href="manual-img/sites-dispatch.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-dispatch.jpg" alt="職人に日程を依頼するフォームと、日報・写真を上げるフォーム。" loading="lazy"></a><figcaption>図：職人に日程を依頼するフォームと、日報・写真を上げるフォーム。</figcaption></figure>
+<figure class="shot "><a href="manual-img/sites-dispatch.jpg" target="_blank" rel="noopener"><img src="manual-img/sites-dispatch.jpg" alt="職人に日程を依頼するフォームと、日報・写真を上げるフォーム。" width="1012" height="609" loading="lazy"></a><figcaption>図：職人に日程を依頼するフォームと、日報・写真を上げるフォーム。</figcaption></figure>
 <div class="box eff"><b class="t">管理できること</b>工事が止まる一番の原因になりがちな「資材が間に合わない」を、期限と色で先回りして防げます。日報の出し忘れ・職人の返事待ち・追加工事の承認待ちも、同じ画面で漏れなく追えます。</div>
 </section>
 
 <!-- ===================== 職人の確認ページ ===================== -->
 <section class="chap" id="p-craftsman">
 <h2>職人の確認ページ <span class="go"><a href="index.html#/craftsman">画面を開く →</a></span></h2>
+<div class="gist"><span class="tag">ひとことで</span><b>職人さん本人</b>が開くページ。依頼を確認して、<b>ボタン1回</b>で返事ができます。</div>
 <p><b>誰が使うか</b>：<b>職人さん本人</b>が、自分の専用リンクから開くページを想定した見本です。本番では、職人ごとに別々のリンクを送り、そのページには<b>その職人さん宛の依頼だけ</b>が出ます（ログインや専用リンクで本人だけが見られる形にします）。左メニューには、見本として「現場進捗状況」の下に並べています。</p>
-<figure class="shot "><a href="manual-img/craftsman-page.jpg" target="_blank" rel="noopener"><img src="manual-img/craftsman-page.jpg" alt="職人の確認ページ。依頼の日程を確認し、「確認しました（了承）」か「代表に相談」を1回押します。" loading="lazy"></a><figcaption>図：職人の確認ページ。依頼の日程を確認し、「確認しました（了承）」か「代表に相談」を1回押します。</figcaption></figure>
+<figure class="shot "><a href="manual-img/craftsman-page.jpg" target="_blank" rel="noopener"><img src="manual-img/craftsman-page.jpg" alt="職人の確認ページ。依頼の日程を確認し、「確認しました（了承）」か「代表に相談」を1回押します。" width="1080" height="860" loading="lazy"></a><figcaption>図：職人の確認ページ。依頼の日程を確認し、「確認しました（了承）」か「代表に相談」を1回押します。</figcaption></figure>
 
 <h3>画面</h3>
 <ul>
@@ -568,8 +629,9 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <!-- ===================== 見積もり作成 ===================== -->
 <section class="chap" id="p-estimate">
 <h2>見積もり作成 <span class="go"><a href="index.html#/estimate">画面を開く →</a></span></h2>
+<div class="gist"><span class="tag">ひとことで</span>見積書を画面で作り、<b>印刷</b>も<b>案件への登録</b>もできます。</div>
 <p><b>目的</b>：見積書を画面で作り、印刷でき、案件にも登録できます。左に入力、右に見積書のプレビューが出ます（狭い画面では上下に並びます）。</p>
-<figure class="shot "><a href="manual-img/estimate-page.jpg" target="_blank" rel="noopener"><img src="manual-img/estimate-page.jpg" alt="見積もり作成。左に入力、右に見積書のプレビュー。" loading="lazy"></a><figcaption>図：見積もり作成。左に入力、右に見積書のプレビュー。</figcaption></figure>
+<figure class="shot "><a href="manual-img/estimate-page.jpg" target="_blank" rel="noopener"><img src="manual-img/estimate-page.jpg" alt="見積もり作成。左に入力、右に見積書のプレビュー。" width="1080" height="860" loading="lazy"></a><figcaption>図：見積もり作成。左に入力、右に見積書のプレビュー。</figcaption></figure>
 
 <h3>入力する場所</h3>
 <ol>
@@ -579,7 +641,7 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
  <li><span class="btn">消す</span>：その行を消します。</li></ul></li>
 </ol>
 <h3>見積書のプレビュー（右）</h3>
-<p>「御 見 積 書」の体裁で、小計・諸経費・値引き・消費税・合計が自動で計算されます。<b>原価の単価（社内用）は、見積書には出ません</b>（印刷してもお客様には見えません）。粗利は、原価を入れたときに社内用として計算されます。</p>
+<p>「御 見 積 書」の体裁で、小計・諸経費・値引き・消費税・合計が自動で計算されます。<span class="imp">原価の単価（社内用）は、見積書には出ません</span>（印刷してもお客様には見えません）。粗利は、原価を入れたときに社内用として計算されます。</p>
 <h3>ボタン</h3>
 <table><thead><tr><th>ボタン</th><th>効果</th></tr></thead><tbody>
 <tr><td><span class="btn">この見積を案件に登録（見積り中）</span></td><td>案件管理に「見積り中」の案件として登録されます（番号が表示されます）</td></tr>
@@ -593,8 +655,9 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <!-- ===================== メモ ===================== -->
 <section class="chap" id="p-memos">
 <h2>メモ（現場の小さな記録） <span class="go"><a href="index.html#/memos">画面を開く →</a></span></h2>
+<div class="gist"><span class="tag">ひとことで</span>現場の小さな気づきをその場で残し、<b>処理するまで知らせてもらいます</b>。</div>
 <p><b>目的</b>：現場や事務所での「ちょっとした気づき」を、その場で書き残し、<b>処理されないままだとリマインド</b>が出ます。忘れ・手配漏れを防ぎます。</p>
-<figure class="shot "><a href="manual-img/memos-page.jpg" target="_blank" rel="noopener"><img src="manual-img/memos-page.jpg" alt="メモ。上の数字の箱、メモを残すフォーム、メモの一覧。" loading="lazy"></a><figcaption>図：メモ。上の数字の箱、メモを残すフォーム、メモの一覧。</figcaption></figure>
+<figure class="shot "><a href="manual-img/memos-page.jpg" target="_blank" rel="noopener"><img src="manual-img/memos-page.jpg" alt="メモ。上の数字の箱、メモを残すフォーム、メモの一覧。" width="1080" height="860" loading="lazy"></a><figcaption>図：メモ。上の数字の箱、メモを残すフォーム、メモの一覧。</figcaption></figure>
 
 <h3>画面</h3>
 <ol>
@@ -612,8 +675,9 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <!-- ===================== 活動分析 ===================== -->
 <section class="chap" id="p-activity">
 <h2>活動分析 <span class="go"><a href="index.html#/activity">画面を開く →</a></span></h2>
+<div class="gist"><span class="tag">ひとことで</span>営業・採用の<b>流れのどこで数が減っているか</b>を見て、手を打つ場所を絞ります。</div>
 <p><b>目的</b>：事業ごとの「活動の流れ」（どの段階で何件か）と、担当者ごとの実績を見ます。「分析期間」（単月／直近3か月／年累計）で担当者の数字の期間を切り替えます。</p>
-<figure class="shot "><a href="manual-img/activity-page.jpg" target="_blank" rel="noopener"><img src="manual-img/activity-page.jpg" alt="活動分析。担当者別の実績と、事業ごとの活動の流れ。" loading="lazy"></a><figcaption>図：活動分析。担当者別の実績と、事業ごとの活動の流れ。</figcaption></figure>
+<figure class="shot "><a href="manual-img/activity-page.jpg" target="_blank" rel="noopener"><img src="manual-img/activity-page.jpg" alt="活動分析。担当者別の実績と、事業ごとの活動の流れ。" width="1080" height="860" loading="lazy"></a><figcaption>図：活動分析。担当者別の実績と、事業ごとの活動の流れ。</figcaption></figure>
 
 <h3>画面</h3>
 <ol>
@@ -628,8 +692,9 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <!-- ===================== 担当者別 ===================== -->
 <section class="chap" id="p-staff">
 <h2>担当者別（経営の分析） <span class="go"><a href="index.html#/staff">画面を開く →</a></span></h2>
+<div class="gist"><span class="tag">ひとことで</span>担当者ごとの売上・コスト・利益を、<b>経営の目</b>で見ます（点数は付けません）。</div>
 <p><b>目的</b>：担当者ごとの数字を経営の目で見ます。上のタブで「リフォーム事業（営業・現場の担当）」と「人材紹介（アドバイザー）」を切り替えます。</p>
-<figure class="shot "><a href="manual-img/staff-page.jpg" target="_blank" rel="noopener"><img src="manual-img/staff-page.jpg" alt="担当者別（リフォーム事業）。列の見出しで並べ替え、担当者名を押すと現場の一覧が出ます。" loading="lazy"></a><figcaption>図：担当者別（リフォーム事業）。列の見出しで並べ替え、担当者名を押すと現場の一覧が出ます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/staff-page.jpg" target="_blank" rel="noopener"><img src="manual-img/staff-page.jpg" alt="担当者別（リフォーム事業）。列の見出しで並べ替え、担当者名を押すと現場の一覧が出ます。" width="1080" height="860" loading="lazy"></a><figcaption>図：担当者別（リフォーム事業）。列の見出しで並べ替え、担当者名を押すと現場の一覧が出ます。</figcaption></figure>
 
 <h3>リフォーム事業</h3>
 <ul>
@@ -639,15 +704,16 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 </ul>
 <h3>人材紹介（アドバイザー）</h3>
 <p>アドバイザーごとの<b>面談数・面談時間・平均単価・成約・売上</b>、成約率・1時間あたり売上など。担当者を押すと、月ごとの推移などの詳細が出ます。全体の平均との差が、色付きのタグで示されます。</p>
-<figure class="shot "><a href="manual-img/staff-advisor.jpg" target="_blank" rel="noopener"><img src="manual-img/staff-advisor.jpg" alt="担当者別（人材紹介のアドバイザー）。" loading="lazy"></a><figcaption>図：担当者別（人材紹介のアドバイザー）。</figcaption></figure>
+<figure class="shot "><a href="manual-img/staff-advisor.jpg" target="_blank" rel="noopener"><img src="manual-img/staff-advisor.jpg" alt="担当者別（人材紹介のアドバイザー）。" width="1080" height="860" loading="lazy"></a><figcaption>図：担当者別（人材紹介のアドバイザー）。</figcaption></figure>
 <div class="box warn"><b class="t">この画面の見方（評価につなげるときの注意）</b>ページの下にも書いてあります。数字は評価の材料であり、点数・順位は付けていません。件数や売上が小さくても、案件の難しさ・新人かどうか・担当した現場の種類で変わります。数字だけで人を判断せず、困りごとの早期発見ややり方の共有に使ってください。</div>
 </section>
 
 <!-- ===================== 目標・予実 ===================== -->
 <section class="chap" id="p-goals">
 <h2>目標・予実 <span class="go"><a href="index.html#/goals">画面を開く →</a></span></h2>
+<div class="gist"><span class="tag">ひとことで</span>年間の<b>目標額</b>を決め、計画に対する実績を月ごとに確かめます。</div>
 <p><b>目的</b>：年間の目標額を決め、実績が計画に対してどうかを月ごとに確認します（予実＝予定と実績）。</p>
-<figure class="shot "><a href="manual-img/goals-page.jpg" target="_blank" rel="noopener"><img src="manual-img/goals-page.jpg" alt="目標・予実。年間の目標額を入力して、計算し直せます。" loading="lazy"></a><figcaption>図：目標・予実。年間の目標額を入力して、計算し直せます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/goals-page.jpg" target="_blank" rel="noopener"><img src="manual-img/goals-page.jpg" alt="目標・予実。年間の目標額を入力して、計算し直せます。" width="1080" height="860" loading="lazy"></a><figcaption>図：目標・予実。年間の目標額を入力して、計算し直せます。</figcaption></figure>
 
 <h3>画面</h3>
 <ol>
@@ -662,10 +728,11 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 <!-- ===================== レポート ===================== -->
 <section class="chap" id="p-report">
 <h2>レポート <span class="go"><a href="index.html#/report">画面を開く →</a></span></h2>
+<div class="gist"><span class="tag">ひとことで</span>週間・月次・四半期・年間の<b>まとめ</b>と、<b>打つ手のヒント</b>を1枚に。</div>
 <p><b>目的</b>：打ち合わせや月末の振り返りに使う「まとめ」です。上のタブ<b>週間／月次／四半期／年間</b>で、見る期間の単位を切り替えます。</p>
-<figure class="shot "><a href="manual-img/report-month.jpg" target="_blank" rel="noopener"><img src="manual-img/report-month.jpg" alt="レポート（月次）。数字の箱、推移のグラフ、担当者別、アドバイザーの意見が並びます。" loading="lazy"></a><figcaption>図：レポート（月次）。数字の箱、推移のグラフ、担当者別、アドバイザーの意見が並びます。</figcaption></figure>
-<figure class="shot "><a href="manual-img/report-week.jpg" target="_blank" rel="noopener"><img src="manual-img/report-week.jpg" alt="レポート（週間）。週ごとの金額は、月の数字を日数で割った見本です。" loading="lazy"></a><figcaption>図：レポート（週間）。週ごとの金額は、月の数字を日数で割った見本です。</figcaption></figure>
-<figure class="shot "><a href="manual-img/report-year.jpg" target="_blank" rel="noopener"><img src="manual-img/report-year.jpg" alt="レポート（年間）。累計の推移（金＝売上、緑の点線＝計画、紫＝前年、水色＝利益）。" loading="lazy"></a><figcaption>図：レポート（年間）。累計の推移（金＝売上、緑の点線＝計画、紫＝前年、水色＝利益）。</figcaption></figure>
+<figure class="shot "><a href="manual-img/report-month.jpg" target="_blank" rel="noopener"><img src="manual-img/report-month.jpg" alt="レポート（月次）。数字の箱、推移のグラフ、担当者別、アドバイザーの意見が並びます。" width="1080" height="860" loading="lazy"></a><figcaption>図：レポート（月次）。数字の箱、推移のグラフ、担当者別、アドバイザーの意見が並びます。</figcaption></figure>
+<figure class="shot "><a href="manual-img/report-week.jpg" target="_blank" rel="noopener"><img src="manual-img/report-week.jpg" alt="レポート（週間）。週ごとの金額は、月の数字を日数で割った見本です。" width="1080" height="860" loading="lazy"></a><figcaption>図：レポート（週間）。週ごとの金額は、月の数字を日数で割った見本です。</figcaption></figure>
+<figure class="shot "><a href="manual-img/report-year.jpg" target="_blank" rel="noopener"><img src="manual-img/report-year.jpg" alt="レポート（年間）。累計の推移（金＝売上、緑の点線＝計画、紫＝前年、水色＝利益）。" width="1080" height="860" loading="lazy"></a><figcaption>図：レポート（年間）。累計の推移（金＝売上、緑の点線＝計画、紫＝前年、水色＝利益）。</figcaption></figure>
 
 <h3>画面（どのタブでも共通）</h3>
 <ol>
@@ -685,17 +752,18 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 タグ：<span class="chip c-hi">要対応</span>（注意が必要）／参考／<span class="chip c-ok">良い点</span>。</li>
 <li>「月次」タブだけ、さらに下に<b>月次レポートの表</b>（損益のまとめ・事業別・目標に対する進捗）と、月を選ぶ欄・<span class="btn">印刷</span>があります。</li>
 </ol>
-<figure class="shot "><a href="manual-img/report-advice.jpg" target="_blank" rel="noopener"><img src="manual-img/report-advice.jpg" alt="アドバイザーの意見（5つの視点）。根拠の数字・できていないこと・打つ手が出ます。規則で作った文章で、AIは未接続です。" loading="lazy"></a><figcaption>図：アドバイザーの意見（5つの視点）。根拠の数字・できていないこと・打つ手が出ます。規則で作った文章で、AIは未接続です。</figcaption></figure>
+<figure class="shot "><a href="manual-img/report-advice.jpg" target="_blank" rel="noopener"><img src="manual-img/report-advice.jpg" alt="アドバイザーの意見（5つの視点）。根拠の数字・できていないこと・打つ手が出ます。規則で作った文章で、AIは未接続です。" width="1012" height="1081" loading="lazy"></a><figcaption>図：アドバイザーの意見（5つの視点）。根拠の数字・できていないこと・打つ手が出ます。規則で作った文章で、AIは未接続です。</figcaption></figure>
 <div class="box warn"><b class="t">注意</b>
-<ul><li><b>アドバイザーの意見は、数字を決まった規則に当てはめて出した文章です</b>。本物のコンサルタントやAIが考えたものではありません。目安として読み、判断は人が行ってください。</li>
-<li><b>週間の金額は見本</b>です。月の数字を日数で割って作っています。本番で週ごとに見るには、週ごとの数字を入れる仕組みが必要です。</li></ul></div>
+<ul><li><span class="imp">アドバイザーの意見は、数字を決まった規則に当てはめて出した文章です</span>。本物のコンサルタントやAIが考えたものではありません。目安として読み、判断は人が行ってください。</li>
+<li><span class="imp">週間の金額は見本</span>です。月の数字を日数で割って作っています。本番で週ごとに見るには、週ごとの数字を入れる仕組みが必要です。</li></ul></div>
 </section>
 
 <!-- ===================== AI分析 ===================== -->
 <section class="chap" id="p-ai">
 <h2>AI分析 <span class="go"><a href="index.html#/ai">画面を開く →</a></span></h2>
+<div class="gist"><span class="tag">ひとことで</span>数字から見つけた<b>気づき</b>を一覧で読みます（注意・参考・良い点）。</div>
 <p><b>目的</b>：数字から見つけた「気づき」を一覧で読みます。「分析の範囲」（全事業／リフォーム／人材紹介）を選べます。</p>
-<figure class="shot "><a href="manual-img/ai-page.jpg" target="_blank" rel="noopener"><img src="manual-img/ai-page.jpg" alt="AI分析。数字から見つけた気づきの一覧（注意・参考・良い点）。" loading="lazy"></a><figcaption>図：AI分析。数字から見つけた気づきの一覧（注意・参考・良い点）。</figcaption></figure>
+<figure class="shot "><a href="manual-img/ai-page.jpg" target="_blank" rel="noopener"><img src="manual-img/ai-page.jpg" alt="AI分析。数字から見つけた気づきの一覧（注意・参考・良い点）。" width="1080" height="860" loading="lazy"></a><figcaption>図：AI分析。数字から見つけた気づきの一覧（注意・参考・良い点）。</figcaption></figure>
 
 <ul>
 <li>気づきには3種類あります：<span class="chip c-hi">注意</span>（計画より遅れている、原価率が高いなど）／参考／<span class="chip c-ok">良い点</span>。上に件数が出ます。</li>
@@ -833,5 +901,12 @@ figure.shot.narrow{max-width:260px}figure.shot.phone{display:inline-block;width:
 
 </main>
 </div>
+<a class="totop" href="#top">↑ 先頭へ</a>
+<script>
+(function(){var links=[].slice.call(document.querySelectorAll('nav.toc a')),map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+var secs=[].slice.call(document.querySelectorAll('section.chap'));
+function on(){var y=window.scrollY+120,cur=null;secs.forEach(function(s){if(s.offsetTop<=y)cur=s.id});links.forEach(function(a){a.classList.remove('on')});if(cur&&map[cur])map[cur].classList.add('on')}
+window.addEventListener('scroll',on,{passive:true});on();})();
+</script>
 </body>
 </html>
