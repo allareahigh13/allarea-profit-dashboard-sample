@@ -555,3 +555,5 @@ details>summary::before{content:"＋";margin-right:8px;color:var(--cyan-light)}d
 .ord-chk{width:22px;height:22px;accent-color:#4fd08a;cursor:pointer}
 .row-late td{background:rgba(255,93,108,.08)}.row-near td{background:rgba(255,194,71,.07)}
 .chips-row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}.chip-plain{display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;background:rgba(159,179,209,.16);color:var(--text-secondary)}
+
+.ord-note{display:inline-block;margin-top:3px}
