@@ -276,3 +276,168 @@ test("アラート：遅れ・日報・職人の確認・相談・追加変更�
   assert.deepEqual(al.map(x => x.level), [...al.map(x => x.level)].sort((p, q) => C.LEVEL_ORDER[p] - C.LEVEL_ORDER[q]));
   assert.equal(new Set(al.map(x => x.id)).size, al.length);              // id は重ならない
 });
+
+test("現場の収支：収益＝出来高売上−コスト、収益率＝収益÷出来高売上、予定との差", () => {
+  const c = { id: "Z", name: "試験", amount: 1000000, contractType: "直接", contractor: "自社", month: "12月", person: "担当A", status: "進行中" };
+  const fin = { start: "2026-12-01", end: "2026-12-10", progress: 50, plannedCost: 700000, costs: { materials: 200000, labor: 150000, subcontract: 0, other: 25000 } };
+  const r = C.siteMoney(c, fin);
+  near(r.earned, 500000); near(r.cost, 375000); near(r.profit, 125000); near(r.margin, 25);
+  near(r.plannedProfit, 300000); near(r.plannedMargin, 30); near(r.marginDiff, -5);
+  assert.equal(r.days, 10); assert.equal(r.origin, "個人（直接）"); assert.equal(r.kind, "個人発注");
+  near(r.forecastProfit, 1000000 - 375000 / 0.5);                       // 最終収益の見込み＝契約額 − コスト÷進み具合
+  assert.equal(C.siteMoney({ ...c, contractType: "元請け経由", contractor: "元請けA" }, fin).origin, "元請けA");
+  assert.equal(C.siteMoney(c, { ...fin, progress: 0, costs: {} }).margin, null);   // 出来高が0なら、収益率は出さない
+});
+
+test("現場の収支（サンプル）：全体の合計＝現場の合計、グループの合計＝全体、プラスとマイナスの現場がある", () => {
+  const rows = C.siteMoneyRows(data.cases, data.siteFinance), t = C.moneyTotals(rows);
+  assert.ok(rows.length >= 8);
+  near(t.profit, rows.reduce((a, r) => a + r.profit, 0)); near(t.earned - t.cost, t.profit);
+  assert.ok(t.plus > 0 && t.minus > 0);                                // 利益の出た現場と、マイナスの現場の両方がある
+  for (const keyFn of [r => r.origin, r => r.kind, r => r.month]) {
+    const g = C.groupMoney(rows, keyFn);
+    near(g.reduce((a, x) => a + x.profit, 0), t.profit); near(g.reduce((a, x) => a + x.earned, 0), t.earned); assert.equal(g.reduce((a, x) => a + x.count, 0), rows.length);
+    for (let i = 1; i < g.length; i++) assert.ok(g[i - 1].profit >= g[i].profit);   // 収益の大きい順
+  }
+  for (const r of rows) assert.ok(r.days >= 1 && r.progress > 0 && r.progress <= 100);
+});
+
+test("現場の収支：粗利が入っている案件（受注管理の粗利）と、コストから出した収益が合う", () => {
+  for (const r of C.siteMoneyRows(data.cases, data.siteFinance)) {
+    const c = data.cases.find(x => x.id === r.id);
+    if (c.gross != null && r.progress === 100) near(r.profit, c.gross);
+  }
+});
+
+test("メモのリマインド：種類ごとの放置の日数と期限で重さが決まる。処理済みは出さない", () => {
+  const asOf = "2026-12-18", mk = o => ({ id: "m", date: "2026-12-18", caseId: null, kind: "メモ", text: "t", author: "a", due: null, status: "未処理", ...o });
+  assert.equal(C.memoLevel(mk({}), asOf), null);                                              // 今日のメモは出さない
+  assert.equal(C.memoLevel(mk({ kind: "要確認", date: "2026-12-17" }), asOf).level, "中");   // 要確認は1日で中
+  assert.equal(C.memoLevel(mk({ kind: "要確認", date: "2026-12-15" }), asOf).level, "高");   // 3日で高
+  assert.equal(C.memoLevel(mk({ kind: "あとで整理", date: "2026-12-16" }), asOf), null);     // 2日はまだ
+  assert.equal(C.memoLevel(mk({ kind: "あとで整理", date: "2026-12-15" }), asOf).level, "中");
+  assert.equal(C.memoLevel(mk({ kind: "あとで整理", date: "2026-12-11" }), asOf).level, "高");
+  assert.equal(C.memoLevel(mk({ kind: "気づき", date: "2026-12-10" }), asOf), null);
+  assert.equal(C.memoLevel(mk({ kind: "気づき", date: "2026-12-01" }), asOf).level, "中");
+  assert.equal(C.memoLevel(mk({ date: "2026-12-17", due: "2026-12-17" }), asOf).level, "高");   // 期限が過ぎたら、種類に関係なく高
+  assert.equal(C.memoLevel(mk({ kind: "要確認", date: "2026-12-01", status: "処理済" }), asOf), null);
+  const al = C.buildAlerts({ cases: [{ id: "A", name: "試験邸", status: "請求済", stage: 5, tasks: [] }], memos: [mk({ id: "m1", caseId: "A", kind: "要確認", date: "2026-12-10" }), mk({ id: "m2", kind: "あとで整理", date: "2026-12-14" })], asOf });
+  assert.deepEqual(al.map(a => [a.id, a.level, a.kind]), [["memo:m1", "高", "メモ"], ["memo:m2", "中", "メモ"]]);
+  assert.ok(al[0].detail.includes("試験邸") && al[1].detail.includes("全体"));
+});
+
+test("メモ（サンプル）：未処理のメモから、重さの違うリマインドが出る", () => {
+  const cases = C.applyDispatches(data.cases, data.dispatches);
+  const al = C.buildAlerts({ cases, dispatches: data.dispatches, reports: data.reports, memos: data.memos, asOf: data.asOf }).filter(a => a.kind === "メモ");
+  assert.ok(al.length >= 3 && al.some(a => a.level === "高") && al.some(a => a.level === "中"));
+  assert.ok(!al.some(a => a.id === "memo:N006"));      // 処理済みは出ない
+});
+
+test("アドバイザー：合計は人材紹介業の月次の数字と一致する（売上・成約・面談）", () => {
+  const biz = data.businesses.find(b => b.id === "staffing"), L = 8;
+  for (let i = 0; i <= L; i++) {
+    near(data.advisors.reduce((a, v) => a + v.sales[i], 0), biz.sales[i]);
+    assert.equal(data.advisors.reduce((a, v) => a + v.hires[i], 0), biz.activity["入社"][i]);
+    assert.equal(data.advisors.reduce((a, v) => a + v.interviews[i], 0), biz.activity["求職者面談"][i]);
+  }
+  for (let i = 9; i < 12; i++) for (const a of data.advisors) assert.equal(a.sales[i], null);
+});
+
+test("アドバイザー：単価＝売上÷成約数、成約率＝成約÷面談、面談1時間あたり売上、全体の合計＝個人の合計", () => {
+  const ts = C.teamStats(data.advisors, 8);
+  for (const a of ts.list) {
+    near(a.unitPrice, a.sales / a.hires); near(a.hireRate, a.hires / a.interviews * 100); near(a.salesPerHour, a.sales / a.hours);
+    near(a.salesPerInterview, a.sales / a.interviews); near(a.minutesPerInterview, a.hours * 60 / a.interviews);
+    assert.ok(a.hires <= a.offers && a.offers <= a.recommended && a.recommended <= a.interviews);
+  }
+  near(ts.total.sales, ts.list.reduce((x, a) => x + a.sales, 0)); assert.equal(ts.total.hires, ts.list.reduce((x, a) => x + a.hires, 0));
+  near(ts.total.sales, C.cumulative(C.buildScope(data, "staffing").sales)[8]);                 // 人材紹介業の累計売上と一致
+  assert.equal(C.advisorStats({ name: "x", interviews: [0], hours: [0], recommended: [0], offers: [0], hires: [0], sales: [0] }, 0).unitPrice, null);
+  near(C.vsAvg(120, 100), 20); assert.equal(C.vsAvg(5, 0), null); assert.equal(C.vsAvg(null, 5), null);
+});
+
+test("リフォームの担当者：売上・コスト・利益・現場数の合計は、現場の収支の合計と一致する", () => {
+  const rows = C.siteMoneyRows(data.cases, data.siteFinance), ppl = C.reformPeople(rows, data.cases), t = C.moneyTotals(rows);
+  near(ppl.reduce((a, p) => a + p.earned, 0), t.earned); near(ppl.reduce((a, p) => a + p.cost, 0), t.cost); near(ppl.reduce((a, p) => a + p.profit, 0), t.profit);
+  assert.equal(ppl.reduce((a, p) => a + p.sites, 0), rows.length);
+  for (let i = 1; i < ppl.length; i++) assert.ok(ppl[i - 1].profit >= ppl[i].profit);
+  for (const p of ppl) { near(p.earned - p.cost, p.profit); if (p.ordered + p.lost) near(p.winRate, p.ordered / (p.ordered + p.lost) * 100); }
+  assert.ok(ppl.some(p => p.minus > 0));
+});
+
+test("案件の期間：工程表＞施工の期間＞受付〜見積の順に決める。日付が無ければ null", () => {
+  const asOf = "2026-12-18";
+  assert.deepEqual(C.caseSpan({ tasks: [{ start: "2026-12-05", end: "2026-12-09" }, { start: "2026-12-01", end: "2026-12-03" }] }, { start: "2026-01-01", end: "2026-01-02" }, asOf), { start: "2026-12-01", end: "2026-12-09", kind: "工程表" });
+  assert.deepEqual(C.caseSpan({ tasks: [] }, { start: "2026-10-01", end: "2026-10-20" }, asOf), { start: "2026-10-01", end: "2026-10-20", kind: "施工の期間" });
+  assert.deepEqual(C.caseSpan({ tasks: [], visitDate: "2026-12-02", quotedOn: "2026-12-10" }, null, asOf), { start: "2026-12-02", end: "2026-12-10", kind: "受付〜見積" });
+  assert.deepEqual(C.caseSpan({ tasks: [], visitDate: "2026-12-02" }, null, asOf), { start: "2026-12-02", end: "2026-12-18", kind: "受付〜見積" });
+  assert.equal(C.caseSpan({ tasks: [] }, null, asOf), null);
+  for (const c of C.applyDispatches(data.cases, data.dispatches)) { const sp = C.caseSpan(c, data.siteFinance[c.id], data.asOf); if (sp) assert.ok(C.dayDiff(sp.start, sp.end) >= 0, c.id); }
+});
+
+test("タスク：受けた側は「新着」と「早く報告して」、預けた側は「預けたまま」と「報告が届いた」。報告・完了で消える", () => {
+  const asOf = "2026-12-18", mk = o => ({ id: "T", title: "試験", createdBy: "代表", assignee: "担当A", createdOn: "2026-12-18", due: null, status: "未着手", progress: 0, ackedOn: null, reportedOn: null, reportNote: "", nudges: 0, nudgedOn: null, ...o });
+  const kinds = (ts, me) => C.taskReminders(ts, asOf, me).map(a => a.kind + ":" + a.level);
+  assert.deepEqual(kinds([mk()], "担当A"), ["新着:低"]);                                    // 今日来た：新着だけ
+  assert.deepEqual(kinds([mk()], "代表"), []);                                               // 預けた側は、まだ何も出ない
+  assert.deepEqual(kinds([mk({ createdOn: "2026-12-16", ackedOn: "2026-12-16", status: "対応中" })], "担当A"), ["報告:中"]);   // 2日たった
+  assert.deepEqual(kinds([mk({ createdOn: "2026-12-16", ackedOn: "2026-12-16", status: "対応中" })], "代表"), ["預けたまま:中"]);
+  assert.deepEqual(kinds([mk({ createdOn: "2026-12-12", ackedOn: "2026-12-12", status: "対応中" })], "担当A"), ["報告:高"]);   // 6日
+  assert.deepEqual(kinds([mk({ createdOn: "2026-12-17", ackedOn: "2026-12-17", due: "2026-12-17" })], "担当A"), ["報告:高"]);   // 期限切れ
+  const rep = mk({ createdOn: "2026-12-12", ackedOn: "2026-12-12", status: "報告済", reportedOn: "2026-12-17", reportNote: "終わりました" });
+  assert.deepEqual(kinds([rep], "担当A"), []);                                               // 報告したら、受けた側の通知は消える
+  assert.deepEqual(kinds([rep], "代表"), ["報告が届いた:中"]);                               // 預けた側には「届いた」が出る
+  assert.deepEqual(kinds([{ ...rep, status: "完了" }], "代表"), []);                         // 完了で、どちらも消える
+  assert.deepEqual(kinds([mk({ status: "差し戻し", reportNote: "宛名が違う" })], "担当A"), ["差し戻し:高"]);
+  assert.deepEqual(kinds([mk({ createdOn: "2026-12-16", ackedOn: "2026-12-16", status: "対応中", nudgedOn: "2026-12-18", nudges: 1 })], "担当A"), ["報告:中", "催促:中"]);
+  assert.deepEqual(kinds([mk({ createdBy: "担当A", assignee: "担当A", due: "2026-12-10", ackedOn: "2026-12-01", status: "対応中" })], "担当A"), ["期限切れ:中"]);   // 自分のタスクの期限切れ
+  const c = C.taskCounts([mk(), rep, mk({ id: "U", assignee: "代表", createdBy: "代表", status: "対応中" })], "代表");
+  assert.deepEqual(c, { mine: 1, newForMe: 0, delegated: 2, reportedToMe: 1 });
+});
+
+test("タスク（サンプル）：代表と担当にリマインドが出て、完了のものは出ない", () => {
+  const me = C.taskReminders(data.tasks, data.asOf, "代表"), a = C.taskReminders(data.tasks, data.asOf, "担当A"), e = C.taskReminders(data.tasks, data.asOf, "担当E");
+  assert.ok(me.some(x => x.kind === "預けたまま" && x.level === "高") && me.some(x => x.kind === "報告が届いた"));
+  assert.ok(a.some(x => x.kind === "報告" && x.level === "高"));
+  assert.ok(e.some(x => x.kind === "新着") && e.some(x => x.kind === "報告"));
+  assert.ok(![...me, ...a, ...e].some(x => x.taskId === "T007"));
+  assert.equal(new Set(me.map(x => x.id)).size, me.length);
+});
+
+test("営業の流れ：商談 → 案件化 → 受注・失注。案件化率・失注率・失注の金額", () => {
+  const cases = [{ id: "A", status: "受注", amount: 100 }, { id: "B", status: "失注", amount: 50 }, { id: "C", status: "見積り中", amount: 30 }, { id: "D", status: "入金済", amount: 20 }];
+  const mt = (id, date, outcome, caseId = null) => ({ id, date, outcome, caseId });
+  const ms = [mt("1", "2026-12-01", "案件化", "A"), mt("2", "2026-12-02", "案件化", "B"), mt("3", "2026-12-03", "案件化", "C"), mt("4", "2026-12-04", "案件化せず"), mt("5", "2026-12-05", "検討中"), mt("6", "2026-11-05", "案件化", "D"), mt("7", "2026-11-06", "案件化せず")];
+  const f = C.salesFunnel(ms, cases);
+  assert.deepEqual([f.total, f.converted, f.declined, f.pending, f.cases], [7, 4, 2, 1, 4]);
+  near(f.convertRate, 4 / 7 * 100);
+  assert.deepEqual([f.won, f.lost, f.open], [2, 1, 1]); near(f.lostRate, 25); near(f.wonRate, 50);
+  assert.equal(f.lostAmount, 50); assert.equal(f.wonAmount, 120); assert.equal(f.openAmount, 30);
+  const dec = C.salesFunnel(ms, cases, "12月"); assert.deepEqual([dec.total, dec.converted, dec.declined, dec.pending, dec.lost], [5, 3, 1, 1, 1]);
+  assert.equal(C.salesFunnel([], cases).convertRate, null);
+  assert.deepEqual(C.funnelByMonth(ms, cases, ["11月", "12月", "1月"]).map(r => [r.month, r.total]), [["11月", 2], ["12月", 5]]);   // 商談が無い月は出さない
+});
+
+test("営業の流れ（サンプル）：案件化していない商談がある。失注の理由の合計は、失注の案件＋案件化せずの商談", () => {
+  const cases = C.applyDispatches(data.cases, data.dispatches), f = C.salesFunnel(data.meetings, cases);
+  assert.ok(f.total >= 8 && f.declined > 0 && f.pending > 0 && f.converted > 0 && f.lost > 0);
+  assert.equal(f.total, f.converted + f.declined + f.pending);
+  const lr = C.lossReasons(data.meetings, cases);
+  assert.equal(lr.reduce((a, r) => a + r.count, 0), cases.filter(c => c.status === "失注").length + data.meetings.filter(m => m.outcome === "案件化せず").length);
+  for (let i = 1; i < lr.length; i++) assert.ok(lr[i - 1].count >= lr[i].count);
+  for (const m of data.meetings) { assert.ok(["案件化", "案件化せず", "検討中"].includes(m.outcome)); if (m.outcome === "案件化") assert.ok(m.caseId, m.id); if (m.caseId) assert.ok(cases.some(c => c.id === m.caseId), m.id); }
+});
+
+test("商談の整理：担当者名・相手・元請けか直接か・物件名・場所・予算・見積の候補を拾う", () => {
+  const staff = ["担当A", "担当B", "担当D"], v1 = data.inbox[0].transcript, v2 = data.inbox[1].transcript;
+  const a = C.structureMeeting(v1, data.estimateTemplates, staff);
+  assert.deepEqual(a.participants, ["担当A"]); assert.equal(a.counterpart, "田中様"); assert.equal(a.contractType, "直接"); assert.equal(a.property, "サンプル邸X");
+  assert.equal(a.place, "お客様宅"); assert.equal(a.budget, 2500000); assert.equal(a.resultGuess, "検討中");   // 見積を出す段階。決まったとは言っていない
+  assert.ok(a.lines.map(l => l.name).includes("ユニットバス交換") && a.lines.map(l => l.name).includes("トイレ交換") && a.lines.find(l => l.name === "クロス張替").qty === 30);
+  const b = C.structureMeeting(v2, data.estimateTemplates, staff);
+  assert.deepEqual(b.participants, ["担当D"]); assert.equal(b.contractType, "元請け経由"); assert.equal(b.contractor, "元請けB"); assert.equal(b.property, "サンプルマンション202"); assert.equal(b.budget, 1800000);
+  assert.equal(b.resultGuess, "合意"); assert.equal(b.counterpart, "管理会社の佐藤さん");
+  const c = C.structureMeeting(data.inbox[2].transcript, data.estimateTemplates, staff);
+  assert.equal(c.resultGuess, "不成立"); assert.equal(c.place, "事務所"); assert.equal(c.counterpart, "山本様");
+  const e = C.structureMeeting("", [], staff); assert.deepEqual([e.participants, e.counterpart, e.contractType, e.property, e.lines], [[], "", "直接", "", []]);
+});

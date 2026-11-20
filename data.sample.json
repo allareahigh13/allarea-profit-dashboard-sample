@@ -603,7 +603,8 @@
     "materials": true,
     "craftsmen": true,
     "curing": true
-   }
+   },
+   "lossReason": null
   },
   {
    "id": "C002",
@@ -672,7 +673,8 @@
     "materials": true,
     "craftsmen": true,
     "curing": true
-   }
+   },
+   "lossReason": null
   },
   {
    "id": "C003",
@@ -741,7 +743,8 @@
     "materials": true,
     "craftsmen": false,
     "curing": true
-   }
+   },
+   "lossReason": null
   },
   {
    "id": "C004",
@@ -762,7 +765,8 @@
    "contractType": "直接",
    "contractDoc": "締結済",
    "quotedOn": null,
-   "checklist": null
+   "checklist": null,
+   "lossReason": null
   },
   {
    "id": "C005",
@@ -780,10 +784,11 @@
    "request": "",
    "budget": null,
    "visitDate": null,
-   "contractType": "直接",
+   "contractType": "元請け経由",
    "contractDoc": "締結済",
    "quotedOn": null,
-   "checklist": null
+   "checklist": null,
+   "lossReason": null
   },
   {
    "id": "C006",
@@ -801,10 +806,11 @@
    "request": "",
    "budget": null,
    "visitDate": null,
-   "contractType": "直接",
+   "contractType": "元請け経由",
    "contractDoc": "締結済",
    "quotedOn": null,
-   "checklist": null
+   "checklist": null,
+   "lossReason": null
   },
   {
    "id": "C007",
@@ -825,7 +831,8 @@
    "contractType": "直接",
    "contractDoc": "未",
    "quotedOn": "2026-12-02",
-   "checklist": null
+   "checklist": null,
+   "lossReason": null
   },
   {
    "id": "C008",
@@ -846,7 +853,8 @@
    "contractType": "直接",
    "contractDoc": "未",
    "quotedOn": "2026-12-14",
-   "checklist": null
+   "checklist": null,
+   "lossReason": null
   },
   {
    "id": "C009",
@@ -915,7 +923,8 @@
     "materials": false,
     "craftsmen": false,
     "curing": false
-   }
+   },
+   "lossReason": null
   },
   {
    "id": "C010",
@@ -933,10 +942,11 @@
    "request": "",
    "budget": null,
    "visitDate": null,
-   "contractType": "直接",
+   "contractType": "元請け経由",
    "contractDoc": "締結済",
    "quotedOn": null,
-   "checklist": null
+   "checklist": null,
+   "lossReason": null
   },
   {
    "id": "C011",
@@ -957,7 +967,8 @@
    "contractType": "直接",
    "contractDoc": "未",
    "quotedOn": null,
-   "checklist": null
+   "checklist": null,
+   "lossReason": "他社に決定（価格）"
   },
   {
    "id": "C012",
@@ -1026,7 +1037,8 @@
     "materials": true,
     "craftsmen": true,
     "curing": true
-   }
+   },
+   "lossReason": null
   },
   {
    "id": "C013",
@@ -1047,7 +1059,8 @@
    "contractType": "直接",
    "contractDoc": "未",
    "quotedOn": null,
-   "checklist": null
+   "checklist": null,
+   "lossReason": null
   },
   {
    "id": "C014",
@@ -1116,7 +1129,96 @@
     "materials": true,
     "craftsmen": true,
     "curing": false
-   }
+   },
+   "lossReason": null
+  },
+  {
+   "id": "C015",
+   "name": "サンプル邸P",
+   "person": "担当B",
+   "contractor": "自社",
+   "amount": 1650000,
+   "month": "10月",
+   "gross": null,
+   "status": "入金済",
+   "note": "",
+   "stage": 6,
+   "tasks": [],
+   "source": "紹介",
+   "request": "洗面とトイレの改修",
+   "budget": 1700000,
+   "visitDate": "2026-09-20",
+   "contractType": "直接",
+   "contractDoc": "締結済",
+   "quotedOn": null,
+   "checklist": null,
+   "lossReason": null
+  },
+  {
+   "id": "C016",
+   "name": "サンプル邸Q",
+   "person": "担当D",
+   "contractor": "元請けB",
+   "amount": 2480000,
+   "month": "10月",
+   "gross": null,
+   "status": "入金済",
+   "note": "",
+   "stage": 6,
+   "tasks": [],
+   "source": "元請けから",
+   "request": "共用廊下の改修",
+   "budget": 2500000,
+   "visitDate": "2026-09-25",
+   "contractType": "元請け経由",
+   "contractDoc": "受領済",
+   "quotedOn": null,
+   "checklist": null,
+   "lossReason": null
+  },
+  {
+   "id": "C017",
+   "name": "サンプル邸R",
+   "person": "担当A",
+   "contractor": "自社",
+   "amount": 980000,
+   "month": "11月",
+   "gross": null,
+   "status": "請求済",
+   "note": "",
+   "stage": 5,
+   "tasks": [],
+   "source": "問い合わせ",
+   "request": "玄関まわりの補修",
+   "budget": 1000000,
+   "visitDate": "2026-10-18",
+   "contractType": "直接",
+   "contractDoc": "締結済",
+   "quotedOn": null,
+   "checklist": null,
+   "lossReason": null
+  },
+  {
+   "id": "C018",
+   "name": "サンプルアパートS",
+   "person": "担当C",
+   "contractor": "元請けC",
+   "amount": 4200000,
+   "month": "11月",
+   "gross": null,
+   "status": "入金済",
+   "note": "",
+   "stage": 6,
+   "tasks": [],
+   "source": "元請けから",
+   "request": "アパート1棟の外装補修",
+   "budget": 4300000,
+   "visitDate": "2026-10-12",
+   "contractType": "元請け経由",
+   "contractDoc": "受領済",
+   "quotedOn": null,
+   "checklist": null,
+   "lossReason": null
   }
  ],
  "workflow": {
@@ -1367,7 +1469,11 @@
    "attendees": "担当A・お客様",
    "text": "浴室とキッチンを新しくしたいです。予算は400万円くらいで考えています。工期は12月からお願いします。ではそれでお願いします。",
    "source": "手入力",
-   "result": "合意"
+   "result": "合意",
+   "time": "",
+   "place": "お客様宅",
+   "withWho": "お客様",
+   "outcome": "案件化"
   },
   {
    "id": "M002",
@@ -1376,7 +1482,11 @@
    "attendees": "担当E・お客様ご夫婦",
    "text": "水まわりと内装をまとめて直したいです。予算は750万円くらい。キッチンとトイレとお風呂を交換、リビングのクロスも張り替えたい、30㎡くらいです。いったん家族で相談して決めます。",
    "source": "音声（Plaud）※この見本では手入力",
-   "result": "検討中"
+   "result": "検討中",
+   "time": "",
+   "place": "お客様宅（オンライン併用）",
+   "withWho": "お客様",
+   "outcome": "案件化"
   },
   {
    "id": "M003",
@@ -1385,7 +1495,753 @@
    "attendees": "担当B・お客様",
    "text": "検討の結果、今回は他社さんにお願いすることにしました。見送りでお願いします。",
    "source": "手入力",
-   "result": "不成立"
+   "result": "不成立",
+   "time": "",
+   "place": "お客様宅",
+   "withWho": "お客様",
+   "outcome": "案件化"
+  },
+  {
+   "id": "M004",
+   "caseId": "C013",
+   "date": "2026-12-03",
+   "time": "10:00",
+   "place": "お客様宅",
+   "withWho": "サンプルL様",
+   "attendees": "担当A",
+   "text": "リビングの壁紙の張替えの相談。見積を出すことになった。",
+   "source": "手入力",
+   "result": "検討中",
+   "outcome": "案件化"
+  },
+  {
+   "id": "M005",
+   "caseId": null,
+   "date": "2026-12-07",
+   "time": "14:00",
+   "place": "事務所（オンライン）",
+   "withWho": "元請けCの担当者",
+   "attendees": "担当D",
+   "text": "共用部の補修の相談。予算が合わず、今回は見送りたいとのこと。",
+   "source": "手入力",
+   "result": "不成立",
+   "outcome": "案件化せず",
+   "lossReason": "予算が合わない"
+  },
+  {
+   "id": "M006",
+   "caseId": null,
+   "date": "2026-12-09",
+   "time": "16:30",
+   "place": "現地",
+   "withWho": "サンプルS様",
+   "attendees": "担当B",
+   "text": "外壁の塗り替えの相談。まだ業者を探している段階で、もう少し考えるとのこと。",
+   "source": "手入力",
+   "result": "検討中",
+   "outcome": "検討中"
+  },
+  {
+   "id": "M007",
+   "caseId": "C018",
+   "date": "2026-10-12",
+   "time": "13:00",
+   "place": "現地",
+   "withWho": "元請けCの担当者",
+   "attendees": "担当C",
+   "text": "アパート1棟の外装補修。見積を出すことになった。",
+   "source": "手入力",
+   "result": "合意",
+   "outcome": "案件化"
+  },
+  {
+   "id": "M008",
+   "caseId": null,
+   "date": "2026-11-15",
+   "time": "11:00",
+   "place": "お客様宅",
+   "withWho": "サンプルT様",
+   "attendees": "担当A",
+   "text": "浴室の相談。他社の見積と比べて決めるとのこと。その後、連絡がなかった。",
+   "source": "手入力",
+   "result": "不成立",
+   "outcome": "案件化せず",
+   "lossReason": "他社に決定"
+  },
+  {
+   "id": "M009",
+   "caseId": "C016",
+   "date": "2026-09-25",
+   "time": "15:00",
+   "place": "現地",
+   "withWho": "元請けBの担当者",
+   "attendees": "担当D",
+   "text": "共用廊下の改修。発注書をもらう方向で進める。",
+   "source": "手入力",
+   "result": "合意",
+   "outcome": "案件化"
+  },
+  {
+   "id": "M010",
+   "caseId": null,
+   "date": "2026-10-10",
+   "time": "10:30",
+   "place": "お客様宅",
+   "withWho": "サンプルU様",
+   "attendees": "担当B",
+   "text": "玄関の相談。時期が合わず、来年に延期。",
+   "source": "手入力",
+   "result": "不成立",
+   "outcome": "案件化せず",
+   "lossReason": "時期が合わない"
+  },
+  {
+   "id": "M011",
+   "caseId": "C017",
+   "date": "2026-10-18",
+   "time": "09:30",
+   "place": "お客様宅",
+   "withWho": "サンプルR様",
+   "attendees": "担当A",
+   "text": "玄関まわりの補修。その場で見積を依頼された。",
+   "source": "手入力",
+   "result": "合意",
+   "outcome": "案件化"
+  }
+ ],
+ "siteFinance": {
+  "C004": {
+   "start": "2026-10-20",
+   "end": "2026-11-15",
+   "progress": 100,
+   "plannedCost": 3900000,
+   "costs": {
+    "materials": 2200000,
+    "labor": 1500000,
+    "subcontract": 350000,
+    "other": 200000
+   }
+  },
+  "C005": {
+   "start": "2026-10-28",
+   "end": "2026-11-20",
+   "progress": 100,
+   "plannedCost": 1500000,
+   "costs": {
+    "materials": 820000,
+    "labor": 550000,
+    "subcontract": 90000,
+    "other": 50000
+   }
+  },
+  "C006": {
+   "start": "2026-11-02",
+   "end": "2026-11-14",
+   "progress": 100,
+   "plannedCost": 660000,
+   "costs": {
+    "materials": 440000,
+    "labor": 380000,
+    "subcontract": 100000,
+    "other": 60000
+   }
+  },
+  "C010": {
+   "start": "2026-10-08",
+   "end": "2026-10-14",
+   "progress": 100,
+   "plannedCost": 310000,
+   "costs": {
+    "materials": 170000,
+    "labor": 120000,
+    "subcontract": 10000,
+    "other": 10000
+   }
+  },
+  "C015": {
+   "start": "2026-10-05",
+   "end": "2026-10-27",
+   "progress": 100,
+   "plannedCost": 1100000,
+   "costs": {
+    "materials": 620000,
+    "labor": 500000,
+    "subcontract": 200000,
+    "other": 100000
+   }
+  },
+  "C016": {
+   "start": "2026-10-12",
+   "end": "2026-10-30",
+   "progress": 100,
+   "plannedCost": 1850000,
+   "costs": {
+    "materials": 1000000,
+    "labor": 800000,
+    "subcontract": 50000,
+    "other": 50000
+   }
+  },
+  "C017": {
+   "start": "2026-11-10",
+   "end": "2026-11-19",
+   "progress": 100,
+   "plannedCost": 720000,
+   "costs": {
+    "materials": 380000,
+    "labor": 300000,
+    "subcontract": 0,
+    "other": 40000
+   }
+  },
+  "C018": {
+   "start": "2026-10-15",
+   "end": "2026-11-28",
+   "progress": 100,
+   "plannedCost": 3200000,
+   "costs": {
+    "materials": 1500000,
+    "labor": 1200000,
+    "subcontract": 200000,
+    "other": 100000
+   }
+  },
+  "C001": {
+   "start": "2026-12-01",
+   "end": "2027-01-02",
+   "progress": 46,
+   "plannedCost": 2770000,
+   "costs": {
+    "materials": 950000,
+    "labor": 600000,
+    "subcontract": 0,
+    "other": 50000
+   }
+  },
+  "C002": {
+   "start": "2026-12-06",
+   "end": "2027-01-07",
+   "progress": 38,
+   "plannedCost": 860000,
+   "costs": {
+    "materials": 250000,
+    "labor": 220000,
+    "subcontract": 100000,
+    "other": 30000
+   }
+  },
+  "C012": {
+   "start": "2026-11-20",
+   "end": "2026-12-26",
+   "progress": 82,
+   "plannedCost": 1870000,
+   "costs": {
+    "materials": 800000,
+    "labor": 750000,
+    "subcontract": 200000,
+    "other": 100000
+   }
+  }
+ },
+ "memos": [
+  {
+   "id": "N001",
+   "date": "2026-12-08",
+   "caseId": "C002",
+   "kind": "要確認",
+   "text": "元請けの担当者に、追加の壁補修の費用を誰が持つかを確認する。",
+   "author": "担当B",
+   "due": null,
+   "status": "未処理",
+   "photos": [],
+   "processedOn": null
+  },
+  {
+   "id": "N002",
+   "date": "2026-12-10",
+   "caseId": "C012",
+   "kind": "要確認",
+   "text": "社内検査の日程を、お客様に確認する。",
+   "author": "担当E",
+   "due": "2026-12-15",
+   "status": "未処理",
+   "photos": [],
+   "processedOn": null
+  },
+  {
+   "id": "N003",
+   "date": "2026-12-12",
+   "caseId": "C001",
+   "kind": "あとで整理",
+   "text": "お客様がコンセントの増設を希望。見積に入れるかは、あとで整理する。",
+   "author": "職人A",
+   "due": null,
+   "status": "未処理",
+   "photos": [
+    "s:11"
+   ],
+   "processedOn": null
+  },
+  {
+   "id": "N004",
+   "date": "2026-12-16",
+   "caseId": null,
+   "kind": "気づき",
+   "text": "職人の手配は、前の週に決めると断られにくい。",
+   "author": "担当A",
+   "due": null,
+   "status": "未処理",
+   "photos": [],
+   "processedOn": null
+  },
+  {
+   "id": "N005",
+   "date": "2026-12-18",
+   "caseId": "C012",
+   "kind": "メモ",
+   "text": "駐車の許可は、今週いっぱい。",
+   "author": "職人C",
+   "due": null,
+   "status": "未処理",
+   "photos": [],
+   "processedOn": null
+  },
+  {
+   "id": "N006",
+   "date": "2026-12-05",
+   "caseId": "C004",
+   "kind": "あとで整理",
+   "text": "請求書の宛名を、元請けの指定の形に直す。",
+   "author": "担当A",
+   "due": null,
+   "status": "処理済",
+   "photos": [],
+   "processedOn": "2026-12-07"
+  }
+ ],
+ "advisors": [
+  {
+   "name": "アドバイザーA",
+   "avgMinutes": 50,
+   "interviews": [
+    11,
+    12,
+    13,
+    16,
+    16,
+    17,
+    19,
+    17,
+    20,
+    null,
+    null,
+    null
+   ],
+   "hours": [
+    9.0,
+    10.0,
+    11.0,
+    13.5,
+    13.5,
+    14.0,
+    16.0,
+    14.0,
+    16.5,
+    null,
+    null,
+    null
+   ],
+   "recommended": [
+    5,
+    6,
+    6,
+    8,
+    7,
+    8,
+    9,
+    8,
+    10,
+    null,
+    null,
+    null
+   ],
+   "offers": [
+    1,
+    1,
+    1,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    null,
+    null,
+    null
+   ],
+   "hires": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    2,
+    1,
+    2,
+    null,
+    null,
+    null
+   ],
+   "sales": [
+    86,
+    91,
+    102,
+    127,
+    122,
+    137,
+    149,
+    136,
+    162,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "name": "アドバイザーB",
+   "avgMinutes": 65,
+   "interviews": [
+    9,
+    10,
+    11,
+    14,
+    14,
+    15,
+    16,
+    15,
+    18,
+    null,
+    null,
+    null
+   ],
+   "hours": [
+    10.0,
+    11.0,
+    12.0,
+    15.0,
+    15.0,
+    16.0,
+    17.5,
+    16.0,
+    19.5,
+    null,
+    null,
+    null
+   ],
+   "recommended": [
+    5,
+    5,
+    5,
+    7,
+    6,
+    7,
+    8,
+    7,
+    8,
+    null,
+    null,
+    null
+   ],
+   "offers": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    2,
+    null,
+    null,
+    null
+   ],
+   "hires": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    null,
+    null,
+    null
+   ],
+   "sales": [
+    75,
+    79,
+    90,
+    111,
+    107,
+    120,
+    131,
+    119,
+    141,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "name": "アドバイザーC",
+   "avgMinutes": 45,
+   "interviews": [
+    7,
+    7,
+    8,
+    10,
+    9,
+    11,
+    12,
+    11,
+    13,
+    null,
+    null,
+    null
+   ],
+   "hours": [
+    5.0,
+    5.0,
+    6.0,
+    7.5,
+    7.0,
+    8.0,
+    9.0,
+    8.0,
+    10.0,
+    null,
+    null,
+    null
+   ],
+   "recommended": [
+    3,
+    3,
+    4,
+    4,
+    5,
+    6,
+    5,
+    5,
+    6,
+    null,
+    null,
+    null
+   ],
+   "offers": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    null,
+    null,
+    null
+   ],
+   "hires": [
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    null,
+    null,
+    null
+   ],
+   "sales": [
+    53,
+    57,
+    64,
+    79,
+    77,
+    86,
+    93,
+    85,
+    101,
+    null,
+    null,
+    null
+   ]
+  }
+ ],
+ "staff": [
+  "代表",
+  "担当A",
+  "担当B",
+  "担当C",
+  "担当D",
+  "担当E"
+ ],
+ "tasks": [
+  {
+   "id": "T001",
+   "title": "サンプル邸Bの追加の壁補修の費用を、元請けに確認して報告する",
+   "detail": "誰が費用を持つか、見積の追加分を出すかを確認する。",
+   "caseId": "C002",
+   "createdBy": "代表",
+   "assignee": "担当A",
+   "createdOn": "2026-12-12",
+   "due": "2026-12-16",
+   "status": "対応中",
+   "progress": 40,
+   "ackedOn": "2026-12-12",
+   "reportedOn": null,
+   "reportNote": "",
+   "nudges": 0,
+   "nudgedOn": null
+  },
+  {
+   "id": "T002",
+   "title": "社内検査の日程を、お客様と決める",
+   "detail": "来週の前半で調整。",
+   "caseId": "C012",
+   "createdBy": "代表",
+   "assignee": "担当E",
+   "createdOn": "2026-12-16",
+   "due": "2026-12-20",
+   "status": "未着手",
+   "progress": 0,
+   "ackedOn": null,
+   "reportedOn": null,
+   "reportNote": "",
+   "nudges": 0,
+   "nudgedOn": null
+  },
+  {
+   "id": "T003",
+   "title": "請求書の宛名を、元請けの指定の形に直して送る",
+   "detail": "",
+   "caseId": "C004",
+   "createdBy": "代表",
+   "assignee": "担当C",
+   "createdOn": "2026-12-10",
+   "due": "2026-12-17",
+   "status": "報告済",
+   "progress": 100,
+   "ackedOn": "2026-12-10",
+   "reportedOn": "2026-12-17",
+   "reportNote": "直して送付しました。",
+   "nudges": 0,
+   "nudgedOn": null
+  },
+  {
+   "id": "T004",
+   "title": "共用部の補修の見積を作る",
+   "detail": "サンプルビルHの共用部。",
+   "caseId": "C009",
+   "createdBy": "担当A",
+   "assignee": "担当D",
+   "createdOn": "2026-12-17",
+   "due": "2026-12-22",
+   "status": "未着手",
+   "progress": 0,
+   "ackedOn": null,
+   "reportedOn": null,
+   "reportNote": "",
+   "nudges": 0,
+   "nudgedOn": null
+  },
+  {
+   "id": "T005",
+   "title": "来月の工程会議の資料をまとめる",
+   "detail": "",
+   "caseId": "",
+   "createdBy": "代表",
+   "assignee": "代表",
+   "createdOn": "2026-12-15",
+   "due": "2026-12-25",
+   "status": "対応中",
+   "progress": 30,
+   "ackedOn": "2026-12-15",
+   "reportedOn": null,
+   "reportNote": "",
+   "nudges": 0,
+   "nudgedOn": null
+  },
+  {
+   "id": "T006",
+   "title": "元請けAへ、請求の確認の連絡をする",
+   "detail": "",
+   "caseId": "C006",
+   "createdBy": "担当B",
+   "assignee": "担当B",
+   "createdOn": "2026-12-14",
+   "due": "2026-12-19",
+   "status": "未着手",
+   "progress": 0,
+   "ackedOn": "2026-12-14",
+   "reportedOn": null,
+   "reportNote": "",
+   "nudges": 0,
+   "nudgedOn": null
+  },
+  {
+   "id": "T007",
+   "title": "見積書の書式を、新しい版にそろえる",
+   "detail": "",
+   "caseId": "",
+   "createdBy": "代表",
+   "assignee": "担当C",
+   "createdOn": "2026-12-05",
+   "due": "2026-12-10",
+   "status": "完了",
+   "progress": 100,
+   "ackedOn": "2026-12-05",
+   "reportedOn": "2026-12-09",
+   "reportNote": "そろえました。",
+   "completedOn": "2026-12-10",
+   "nudges": 0,
+   "nudgedOn": null
+  }
+ ],
+ "inbox": [
+  {
+   "id": "V001",
+   "file": "商談_2026-12-18_サンプル邸X.m4a",
+   "recordedAt": "2026-12-18 10:05",
+   "minutes": 42,
+   "source": "クラウド録音（サンプル）",
+   "imported": false,
+   "transcript": "担当A：サンプル邸Xの件で、お客様宅に伺いました。浴室とトイレについて、希望を伺います。\n田中様：浴室を新しくしたいです。トイレも交換したい。リビングのクロスを張り替えたい、30㎡くらいです。\n担当A：ご予算はどのくらいでしょうか。\n田中様：予算は250万円くらいで考えています。年明けからお願いします。\n担当A：承知しました。では見積を作って、来週お持ちします。"
+  },
+  {
+   "id": "V002",
+   "file": "商談_2026-12-18_サンプルマンション202.m4a",
+   "recordedAt": "2026-12-18 14:30",
+   "minutes": 28,
+   "source": "クラウド録音（サンプル）",
+   "imported": false,
+   "transcript": "担当D：元請けBさんの紹介で、サンプルマンション202の現地調査に来ました。\n管理会社の佐藤さん：キッチンの交換と、床のフローリング張替えをお願いしたいです。予算は180万円くらい。\n担当D：元請けBさん経由の発注書でお受けする形になります。\n佐藤さん：それでお願いします。進めてください。"
+  },
+  {
+   "id": "V003",
+   "file": "商談_2026-12-17_サンプルV.m4a",
+   "recordedAt": "2026-12-17 16:10",
+   "minutes": 19,
+   "source": "クラウド録音（サンプル）",
+   "imported": true,
+   "transcript": "担当B：サンプルV様の外壁の件で、事務所でお話ししました。\n山本様：検討の結果、今回は他社さんにお願いすることにしました。見送りでお願いします。"
   }
  ]
 }

@@ -1,14 +1,14 @@
 /* 案件管理・現場進捗状況（工程表つき）・見積もり作成。金額は円。数字はすべて合成サンプル。 */
 import * as C from "./calc.js";
-import { state, store, getCases, saveEdits } from "./state.js";
+import { state, store, getCases, saveEdits, getMeetings } from "./state.js";
 import { esc, ICON, svgI, kpi, bar, fmtMan } from "./ui.js";
 
-const yen = v => (Number.isFinite(v) ? Math.round(v).toLocaleString("ja-JP") : "—");
-const pct = v => (Number.isFinite(v) ? v.toFixed(1) + "%" : "—");
-const th = t => `<th scope="col">${esc(t)}</th>`;
+export const yen = v => (Number.isFinite(v) ? Math.round(v).toLocaleString("ja-JP") : "—");
+export const pct = v => (Number.isFinite(v) ? v.toFixed(1) + "%" : "—");
+export const th = t => `<th scope="col">${esc(t)}</th>`;
 const MONTH_ORDER = ["12月", "1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月"];   // 月の並び（12月始まり）
 const STATUS_CLASS = { "見積り中": "amber", "受注": "sky", "進行中": "violet", "請求済": "teal", "入金済": "green", "失注": "gray", "": "none" };
-const pill = st => `<span class="pill ${STATUS_CLASS[st] || "none"}">${esc(st || "未設定")}</span>`;
+export const pill = st => `<span class="pill ${STATUS_CLASS[st] || "none"}">${esc(st || "未設定")}</span>`;
 const $ = s => document.querySelector(s);
 
 /* =================== 案件管理 =================== */
@@ -20,7 +20,7 @@ function filtered(all) {
     && (!q || (c.name + c.note + c.id + c.contractor + c.person).toLowerCase().includes(q)));
 }
 const uniq = (all, k) => [...new Set(all.map(c => c[k]).filter(Boolean))];
-const opt = (v, cur, label) => `<option value="${esc(v)}"${String(cur) === String(v) ? " selected" : ""}>${esc(label ?? v)}</option>`;
+export const opt = (v, cur, label) => `<option value="${esc(v)}"${String(cur) === String(v) ? " selected" : ""}>${esc(label ?? v)}</option>`;
 
 export function renderCases(route, post) {
   void post;
@@ -41,7 +41,7 @@ export function renderCases(route, post) {
   const list = filtered(all);
   const rows = list.map(c => {
     const rate = C.caseGrossRate(c), hasSite = c.tasks.length > 0;
-    return `<tr><td>${esc(c.id)}</td><td><b>${esc(c.name)}</b></td><td>${esc(c.person)}</td><td>${esc(c.contractor)}</td><td>${yen(c.amount)}</td><td>${esc(c.month)}</td>
+    return `<tr><td>${esc(c.id)}</td><td><b>${esc(c.name)}</b> <button type="button" class="linkbtn" data-case-open="${esc(c.id)}">詳細</button></td><td>${esc(c.person)}</td><td>${esc(c.contractor)}</td><td>${yen(c.amount)}</td><td>${esc(c.month)}</td>
       <td><input class="cell-in" type="number" min="0" step="1000" inputmode="numeric" aria-label="${esc(c.name)}の粗利（円）" data-case-gross="${esc(c.id)}" value="${Number.isFinite(c.gross) ? c.gross : ""}" placeholder="未入力"></td>
       <td>${pct(rate)}</td><td><select class="cell-sel" aria-label="${esc(c.name)}の状況" data-case-status="${esc(c.id)}">${["", ...state.data.statuses].map(s => opt(s, c.status, s || "（未設定）")).join("")}</select></td>
       <td class="note-cell">${esc(c.note)}</td><td>${hasSite ? `<a class="mini-link" href="#/sites" data-site-open="${esc(c.id)}">工程表 →</a>` : ""}</td></tr>`;
@@ -97,11 +97,11 @@ export function caseAdd(fd) {
 
 /* =================== 現場進捗状況（工程表つき） =================== */
 const STAGE_NAMES = () => state.data.workflow.stages.map(s => s.name);
-function stageTracker(c) {
+export function stageTracker(c) {
   const names = STAGE_NAMES();
   return `<ol class="stages" aria-label="大きな工程">${names.map((n, i) => `<li class="${i < c.stage ? "done" : i === c.stage ? "now" : ""}" ${i === c.stage ? 'aria-current="step"' : ""}><span class="no">${i + 1}</span><span class="nm">${esc(n)}</span></li>`).join("")}</ol>`;
 }
-function ganttHtml(rows, a, b, asOf, opts = {}) {
+export function ganttHtml(rows, a, b, asOf, opts = {}) {
   const span = Math.max(1, C.dayDiff(a, b)), left = d => Math.max(0, Math.min(100, C.dayDiff(a, d) / span * 100));
   const ticks = []; for (let d = a; C.dayDiff(d, b) >= 0; d = C.addDays(d, 7)) ticks.push(d);
   const md = d => { const [, m, dd] = d.split("-").map(Number); return `${m}/${dd}`; };
@@ -114,62 +114,8 @@ function ganttHtml(rows, a, b, asOf, opts = {}) {
   }).join("");
   return `<div class="gantt" role="img" aria-label="${esc(opts.aria || "工程表")}"><div class="g-inner">${head}${body}</div></div>`;
 }
-const stLabel = s => `<span class="tag ${{ "完了": "up", "進行中": "flat", "遅れ気味": "down", "遅れ": "down", "未着手": "flat" }[s] || "flat"}">${s}</span>`;
+export const stLabel = s => `<span class="tag ${{ "完了": "up", "進行中": "flat", "遅れ気味": "down", "遅れ": "down", "未着手": "flat" }[s] || "flat"}">${s}</span>`;
 
-export function renderSites(route, post) {
-  void post;
-  const all = getCases(), asOf = state.data.asOf, wf = state.data.workflow;
-  const sites = all.filter(c => c.tasks.length && ["受注", "進行中", "請求済"].includes(c.status));
-  const early = all.filter(c => !c.tasks.length && ["見積り中", "受注"].includes(c.status));
-  if (!sites.find(c => c.id === state.site.sel)) state.site.sel = sites[0]?.id ?? null;
-  const tabs = `<nav class="page-tabs" aria-label="表示の切り替え"><a href="#/sites" data-site-tab="list" ${state.site.tab === "list" ? 'aria-current="page"' : ""}>進捗の一覧</a><a href="#/sites" data-site-tab="gantt" ${state.site.tab === "gantt" ? 'aria-current="page"' : ""}>工程表</a></nav>`;
-  const progs = sites.map(c => ({ c, p: C.siteProgress(c.tasks, asOf) }));
-  const late = progs.filter(x => x.p && x.p.delta < -5).length;
-  const kpis = [
-    kpi({ tone: "sky", icon: "site", label: "工程表のある現場", value: String(sites.length), unit: "件", sub: `施工中 ${sites.filter(c => c.status === "進行中").length}・着工待ち ${sites.filter(c => c.status === "受注").length}・完了後の請求 ${sites.filter(c => c.status === "請求済").length}／基準日 ${asOf}` }),
-    kpi({ tone: late ? "amber" : "teal", icon: "target", label: "計画より遅れている現場", value: String(late), unit: "件", sub: late ? "実績が計画より5ポイント以上遅れています" : "遅れている現場はありません" }),
-    kpi({ tone: "gold", icon: "estimate", label: "着工前の案件", value: String(early.length), unit: "件", sub: "見積り中・工程表の前の受注" }),
-  ].join("");
-  let body = "";
-  if (state.site.tab === "list") {
-    const cards = progs.map(({ c, p }) => {
-      const next = c.tasks.find(t => t.done < 100), st = wf.stages[c.stage] || wf.stages[0];
-      const dl = p.delta, flag = dl < -5 ? `<span class="tag down">計画より ${Math.abs(dl).toFixed(0)}ポイント遅れ</span>` : dl > 5 ? `<span class="tag up">計画より ${dl.toFixed(0)}ポイント先行</span>` : `<span class="tag flat">計画どおり</span>`;
-      return `<article class="card site-card"><div class="ctl-row"><h3 style="margin:0">${esc(c.name)} ${pill(c.status)}</h3><div class="tags">${flag}</div></div>
-        <p class="sub2">担当 ${esc(c.person)}・元請け ${esc(c.contractor)}・受注額 ${yen(c.amount)}円・工期 ${p.start} 〜 ${p.end}</p>
-        ${stageTracker(c)}
-        <div class="stage-note"><b>${esc(st.name)}</b> の担当：${esc(st.owner)}／残す記録：${esc(st.records)} <span class="tag flat">仮</span></div>
-        <div class="pbar-wrap"><div class="r2"><span>工程の進み具合（実績）</span><b>${pct(p.actual)}</b></div><div class="pbar gold" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p.actual)}" aria-label="${esc(c.name)}の工程の進み具合"><i style="width:${p.actual}%"></i><b style="left:${p.planned}%" title="計画どおりなら ${p.planned.toFixed(1)}%"></b></div><div class="r2"><span>計画どおりなら ${pct(p.planned)}</span><span>${next ? `次にやること：${esc(next.name)}（${next.start}〜${next.end}）` : "すべての工程が完了"}</span></div></div>
-        <div class="tools"><button class="btn" type="button" data-stage="${esc(c.id)}:-1">前の工程へ</button><button class="btn" type="button" data-stage="${esc(c.id)}:1">次の工程へ</button><a class="btn" href="#/sites" data-site-open="${esc(c.id)}">工程表を見る</a></div></article>`;
-    }).join("") || `<div class="card empty">工程表のある現場がありません。</div>`;
-    const etr = early.map(c => `<tr><td>${esc(c.id)}</td><td><b>${esc(c.name)}</b></td><td>${pill(c.status)}</td><td>${esc(wf.stages[c.stage]?.name || "")}</td><td>${esc(c.person)}</td><td>${yen(c.amount)}</td><td>${esc(c.note)}</td></tr>`).join("");
-    body = `<section class="grid2">${cards}</section><section class="card panel"><h2 class="ttl">着工前の案件（見積り・契約の段階）</h2><div class="tablewrap"><table class="tbl"><thead><tr>${["番号", "物件名", "状況", "いまの工程", "担当者", "金額（円）", "備考"].map(th).join("")}</tr></thead><tbody>${etr || `<tr><td colspan="7" class="empty">着工前の案件はありません。</td></tr>`}</tbody></table></div></section>`;
-  } else {
-    const cur = sites.find(c => c.id === state.site.sel);
-    const opts = sites.map(c => opt(c.id, state.site.sel, `${c.name}（${c.status}）`)).join("");
-    let one = `<div class="card empty">工程表のある現場がありません。</div>`;
-    if (cur) {
-      const p = C.siteProgress(cur.tasks, asOf), a = C.addDays(p.start < asOf ? p.start : asOf, -2), b = C.addDays(p.end > asOf ? p.end : asOf, 3);
-      const rows = cur.tasks.map((t, i) => ({ labelHtml: `<b>${i + 1}. ${esc(t.name)}</b><small>${t.start} 〜 ${t.end}</small>`, start: t.start, end: t.end, done: t.done, state: C.taskState(t, asOf), title: `${t.name}：${t.start}〜${t.end}／${t.done}%` }));
-      const trs = cur.tasks.map((t, i) => { const s = C.taskState(t, asOf); return `<tr><td>${i + 1}</td><td>${esc(t.name)}</td><td>${t.start}</td><td>${t.end}</td><td>${stLabel(s)}</td><td><input class="cell-in" type="number" min="0" max="100" step="5" inputmode="numeric" aria-label="${esc(t.name)}の進み具合（％）" data-task-pct="${esc(cur.id)}:${i}" value="${Math.round(t.done)}"> %</td><td>${pct(C.expectedProgress(t, asOf))}</td><td>${t.done >= 100 ? "" : `<button type="button" class="btn small" data-task-done="${esc(cur.id)}:${i}">完了にする</button>`}</td></tr>`; }).join("");
-      one = `<section class="card panel"><div class="ctl-row"><h2 class="ttl">${esc(cur.name)} の工程表</h2><div class="ctl"><label for="siteSel">現場</label><select class="sel" id="siteSel">${opts}</select></div></div>
-        <p class="sub2">基準日 ${asOf}（縦線が今日）。棒の中の色は進み具合、枠の色は状態（水色＝進行中・緑＝完了・ピンク＝遅れ・灰＝未着手）。</p>
-        ${ganttHtml(rows, a, b, asOf, { aria: `${cur.name}の工程表` })}
-        <div class="tablewrap" style="margin-top:12px"><table class="tbl"><thead><tr>${["", "工程", "開始", "終了", "状態", "進み具合", "計画どおりなら", ""].map(th).join("")}</tr></thead><tbody>${trs}</tbody></table></div>
-        <p class="note">進み具合を直すと、この現場の「進捗の一覧」にも反映されます（このブラウザにだけ保存）。工程の名前と順番は仮です。</p></section>`;
-    }
-    // 全現場の概要
-    const starts = progs.map(x => x.p.start).sort(), ends = progs.map(x => x.p.end).sort();
-    let all2 = "";
-    if (progs.length) {
-      const a = C.addDays(starts[0] < asOf ? starts[0] : asOf, -3), b = C.addDays(ends[ends.length - 1] > asOf ? ends[ends.length - 1] : asOf, 3);
-      const rows = progs.map(({ c, p }) => ({ labelHtml: `<b>${esc(c.name)}</b><small>${esc(c.person)}・${pill(c.status)}</small>`, start: p.start, end: p.end, done: p.actual, state: p.delta < -5 ? "遅れ" : p.actual >= 100 ? "完了" : p.actual === 0 ? "未着手" : "進行中", title: `${c.name}：${p.start}〜${p.end}／実績 ${p.actual.toFixed(0)}%（計画 ${p.planned.toFixed(0)}%）` }));
-      all2 = `<section class="card panel"><h2 class="ttl">全現場の工程（工期の全体）</h2>${ganttHtml(rows, a, b, asOf, { labelHead: "現場", aria: "全現場の工期" })}<p class="note">1本が1現場の工期です。色の濃い部分が実績の進み具合です。</p></section>`;
-    }
-    body = `${one}${all2}`;
-  }
-  return `<section class="kpis k5" aria-label="現場の主な数字">${kpis}</section>${tabs}${body}`;
-}
 export function siteStage(id, delta) {
   const c = getCases().find(x => x.id === id); if (!c) return;
   const max = state.data.workflow.stages.length - 1;
@@ -186,7 +132,7 @@ export function defaultEstimate() {
   return { customer: "サンプル 様", property: "サンプル邸N", title: "リフォーム工事", date: asOf, valid: C.addDays(asOf, 30), person: "", overheadPct: 5, discount: 0, taxRate: 10, note: "",
     lines: [{ name: "解体・撤去工事", qty: 1, unit: "式", price: 150000, cost: 100000 }, { name: "クロス張替", qty: 45, unit: "㎡", price: 1200, cost: 800 }, { name: "養生・清掃", qty: 1, unit: "式", price: 40000, cost: 25000 }] };
 }
-const est = () => (state.est ||= defaultEstimate());
+export const est = () => (state.est ||= defaultEstimate());
 export const estSave = () => store.set("estimate", state.est);
 
 function estLines(e) {

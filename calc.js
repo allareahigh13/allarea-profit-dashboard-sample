@@ -295,7 +295,7 @@ export function siteNow(tasks, asOf) {
 }
 
 /** 抜け漏れ・遅れのアラート。入力：{ cases, dispatches, reports, asOf }。各アラートは決まった id を持つ（確認済みにできる）。 */
-export function buildAlerts({ cases, dispatches = [], reports = [], asOf }) {
+export function buildAlerts({ cases, dispatches = [], reports = [], memos = [], asOf }) {
   const out = [], add = a => out.push(a);
   const days = d => dayDiff(d, asOf);
   for (const c of cases) {
@@ -331,7 +331,13 @@ export function buildAlerts({ cases, dispatches = [], reports = [], asOf }) {
     if (d.status === "相談") add({ id: `consult:${d.id}`, level: "高", kind: "職人の相談", caseId: c.id, title: `職人から「代表に相談」：${d.craftsman}`, detail: `${c.name}の「${t ? t.name : ""}」（候補 ${d.start}〜${d.end}）。都合がつかないとの連絡です。${d.memo ? "ひと言：" + d.memo : ""}`, action: "別の日程を決め、もう一度依頼する" });
     if (d.status === "依頼中") { const w = days(d.sentOn); if (w >= 2) add({ id: `wait:${d.id}`, level: w >= 4 ? "高" : "中", kind: "職人の確認", caseId: c.id, title: `職人の確認待ちが ${w}日：${d.craftsman}`, detail: `${c.name}の「${t ? t.name : ""}」（候補 ${d.start}〜${d.end}）。依頼日は ${d.sentOn} です。`, action: "職人に、確認ボタンを押すよう連絡する" }); }
   }
-  return out.sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level] || a.caseId.localeCompare(b.caseId));
+  for (const m of memos) {   // 処理されていないメモのリマインド
+    if (m.status === "処理済") continue;
+    const age = dayDiff(m.date, asOf), c = m.caseId ? cases.find(x => x.id === m.caseId) : null, where = c ? c.name : "全体";
+    const lv = memoLevel(m, asOf);
+    if (lv) add({ id: `memo:${m.id}`, level: lv.level, kind: "メモ", caseId: m.caseId || "", title: lv.title, detail: `${where}（${m.kind}・${age}日前・${m.author}）：${m.text}`, action: "内容を処理して、処理済みにする" });
+  }
+  return out.sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level] || String(a.caseId).localeCompare(String(b.caseId)));
 }
 
 /** 商談の記録（文字起こしやメモ）から、叩き台を作る。AI ではなく、決まった言葉の規則で拾う（音声の解析は未接続）。 */
@@ -339,7 +345,7 @@ const MEETING_RULES = {
   requests: ["したい", "希望", "お願い", "ほしい", "欲しい", "変えたい", "交換", "張替", "張り替え", "直したい", "気になる", "困って"],
   budget: ["予算", "万円", "円まで", "円くらい", "円以内"],
   schedule: ["いつ", "までに", "着工", "工期", "完了", "引っ越し", "来月", "今月", "年内", "年明け"],
-  agree: ["お願いします", "進めてください", "進めて", "決めました", "決定", "それでいきます", "合意", "契約します"],
+  agree: ["それでお願いします", "進めてください", "決めました", "決定", "それでいきます", "合意", "契約します", "お受けする"],
   decline: ["見送り", "やめます", "他社", "検討の結果", "高すぎ", "今回は"],
 };
 const ITEM_RULES = [["ユニットバス交換", /ユニットバス|お風呂|浴室|バス/], ["システムキッチン交換", /キッチン|台所/], ["トイレ交換", /トイレ|便器/], ["フローリング張替", /フローリング|床/], ["クロス張替", /クロス|壁紙/], ["解体・撤去工事", /解体|撤去/], ["電気工事", /電気|コンセント|照明/], ["給排水工事", /給排水|水道|配管/]];
@@ -377,4 +383,157 @@ export function applyDispatches(cases, dispatches) {
     }
     return { ...c, tasks };
   });
+}
+
+/* ===================== 現場ごとの収支（金額は円） ===================== */
+export const originOf = c => (c.contractType === "直接" ? "個人（直接）" : c.contractor);
+export const kindOf = c => (c.contractType === "直接" ? "個人発注" : "元請け経由");
+
+/** 1現場の収支。売上は「進み具合に応じた出来高」、コストはこれまでにかかった実績。 */
+export function siteMoney(c, fin) {
+  const costs = { materials: 0, labor: 0, subcontract: 0, other: 0, ...(fin.costs || {}) };
+  const cost = costs.materials + costs.labor + costs.subcontract + costs.other;
+  const progress = Math.max(0, Math.min(100, fin.progress));
+  const earned = c.amount * progress / 100, profit = earned - cost, plannedProfit = c.amount - fin.plannedCost;
+  const forecastCost = progress > 0 ? cost / (progress / 100) : null, forecastProfit = forecastCost == null ? null : c.amount - forecastCost;
+  return { id: c.id, name: c.name, person: c.person, contractor: c.contractor, origin: originOf(c), kind: kindOf(c), month: c.month, status: c.status,
+    start: fin.start, end: fin.end, days: dayDiff(fin.start, fin.end) + 1, progress, planned: c.amount, plannedCost: fin.plannedCost, plannedProfit, plannedMargin: ratio(plannedProfit, c.amount),
+    earned, cost, costs, profit, margin: ratio(profit, earned), marginDiff: (ratio(profit, earned) ?? 0) - (ratio(plannedProfit, c.amount) ?? 0),
+    forecastProfit, forecastMargin: forecastProfit == null ? null : ratio(forecastProfit, c.amount) };
+}
+export function siteMoneyRows(cases, finMap) {
+  return cases.filter(c => finMap[c.id] && finMap[c.id].progress > 0).map(c => siteMoney(c, finMap[c.id]));
+}
+export function moneyTotals(rows) {
+  const sum = k => rows.reduce((a, r) => a + r[k], 0), earned = sum("earned"), profit = sum("profit");
+  return { count: rows.length, planned: sum("planned"), plannedCost: sum("plannedCost"), earned, cost: sum("cost"), profit, margin: ratio(profit, earned),
+    plus: rows.filter(r => r.profit > 0).length, minus: rows.filter(r => r.profit < 0).length, days: rows.length ? Math.round(sum("days") / rows.length) : 0 };
+}
+export function groupMoney(rows, keyFn) {
+  const m = new Map();
+  for (const r of rows) { const k = keyFn(r); if (!m.has(k)) m.set(k, []); m.get(k).push(r); }
+  return [...m.entries()].map(([key, list]) => ({ key, ...moneyTotals(list) })).sort((a, b) => b.profit - a.profit);
+}
+
+/** 処理されていないメモを、どれくらい放置したかで、重さを決める。 */
+export function memoLevel(m, asOf) {
+  if (m.status === "処理済") return null;
+  const age = dayDiff(m.date, asOf);
+  if (m.due && parseDate(m.due) < parseDate(asOf)) return { level: "高", title: `メモの期限が過ぎています（${dayDiff(m.due, asOf)}日）` };
+  const t = m.kind === "要確認" ? { mid: 1, hi: 3 } : m.kind === "あとで整理" ? { mid: 3, hi: 7 } : { mid: 14, hi: 30 };
+  if (age >= t.hi) return { level: "高", title: `処理されていないメモが ${age}日 たまっています` };
+  if (age >= t.mid) return { level: "中", title: `処理されていないメモ（${age}日）` };
+  return null;
+}
+
+/* ===================== 担当者別（経営の分析用） ===================== */
+const sumTo = (a, upto) => a.slice(0, upto + 1).reduce((x, v) => x + (isNum(v) ? v : 0), 0);
+
+/** 人材紹介のアドバイザー1人の数字（期初〜upto 月）。単価の単位は売上と同じ（万円）。 */
+export function advisorStats(adv, upto) {
+  const interviews = sumTo(adv.interviews, upto), hours = sumTo(adv.hours, upto), recommended = sumTo(adv.recommended, upto),
+    offers = sumTo(adv.offers, upto), hires = sumTo(adv.hires, upto), sales = sumTo(adv.sales, upto);
+  return { name: adv.name, interviews, hours, recommended, offers, hires, sales,
+    unitPrice: hires ? sales / hires : null, hireRate: ratio(hires, interviews), salesPerHour: hours ? sales / hours : null, salesPerInterview: interviews ? sales / interviews : null,
+    recRate: ratio(recommended, interviews), offerRate: ratio(offers, recommended), acceptRate: ratio(hires, offers), minutesPerInterview: interviews ? hours * 60 / interviews : null };
+}
+export function teamStats(advisors, upto) {
+  const list = advisors.map(a => advisorStats(a, upto)), sum = k => list.reduce((x, a) => x + a[k], 0);
+  const interviews = sum("interviews"), hours = sum("hours"), recommended = sum("recommended"), offers = sum("offers"), hires = sum("hires"), sales = sum("sales");
+  return { list, total: { interviews, hours, recommended, offers, hires, sales, unitPrice: hires ? sales / hires : null, hireRate: ratio(hires, interviews), salesPerHour: hours ? sales / hours : null,
+    salesPerInterview: interviews ? sales / interviews : null, recRate: ratio(recommended, interviews), offerRate: ratio(offers, recommended), acceptRate: ratio(hires, offers) } };
+}
+/** 平均との差（％）。平均が0または無いときは null。 */
+export const vsAvg = (v, avg) => (isNum(v) && isNum(avg) && avg !== 0 ? (v - avg) / Math.abs(avg) * 100 : null);
+
+/** リフォーム：担当者ごとの売上・コスト・利益・現場数・受注率。現場の収支（siteMoneyRows）と、案件の状況から作る。 */
+export function reformPeople(moneyRows, cases) {
+  const names = [...new Set([...moneyRows.map(r => r.person), ...cases.map(c => c.person)])].filter(Boolean);
+  return names.map(name => {
+    const rows = moneyRows.filter(r => r.person === name), t = moneyTotals(rows), mine = cases.filter(c => c.person === name);
+    const ordered = mine.filter(c => ["受注", "進行中", "請求済", "入金済"].includes(c.status)).length, lost = mine.filter(c => c.status === "失注").length;
+    const pipeline = mine.filter(c => c.status === "見積り中").reduce((a, c) => a + (isNum(c.amount) ? c.amount : 0), 0);
+    return { name, sites: t.count, earned: t.earned, cost: t.cost, profit: t.profit, margin: t.margin, plus: t.plus, minus: t.minus, avgSize: t.count ? t.earned / t.count : null,
+      ordered, lost, winRate: ordered + lost ? ordered / (ordered + lost) * 100 : null, pipeline, quoting: mine.filter(c => c.status === "見積り中").length };
+  }).filter(p => p.sites || p.ordered || p.lost || p.quoting).sort((a, b) => b.profit - a.profit);
+}
+
+/** 案件の期間（ガントチャートの1本の長さ）。工程表があればその全体、無ければ施工の実績の期間、受付・見積の段階なら、現調日から見積の提出日（無ければ基準日）まで。日付が無い案件は null。 */
+export function caseSpan(c, fin, asOf) {
+  if (c.tasks && c.tasks.length) { const st = c.tasks.map(t => t.start).sort(), en = c.tasks.map(t => t.end).sort(); return { start: st[0], end: en[en.length - 1], kind: "工程表" }; }
+  if (fin && fin.start && fin.end) return { start: fin.start, end: fin.end, kind: "施工の期間" };
+  if (c.visitDate) { const end = c.quotedOn && parseDate(c.quotedOn) >= parseDate(c.visitDate) ? c.quotedOn : (parseDate(asOf) >= parseDate(c.visitDate) ? asOf : c.visitDate); return { start: c.visitDate, end: parseDate(end) >= parseDate(c.visitDate) ? end : c.visitDate, kind: "受付〜見積" }; }
+  return null;
+}
+
+/* ===================== タスク（依頼・委任・報告・リマインド） ===================== */
+export const TASK_STATUSES = ["未着手", "対応中", "報告済", "完了", "差し戻し"];
+const isDelegated = t => t.createdBy !== t.assignee;
+
+/** 見ている人（me）にとってのリマインド。受けた側：新着・早く報告して。預けた側：報告が届いた・預けたまま。 */
+export function taskReminders(tasks, asOf, me) {
+  const out = [], add = a => out.push(a);
+  for (const t of tasks) {
+    if (t.status === "完了") continue;
+    const age = dayDiff(t.createdOn, asOf), overdue = !!(t.due && parseDate(t.due) < parseDate(asOf));
+    if (t.assignee === me) {
+      if (t.status === "差し戻し") add({ id: `task:back:${t.id}`, level: "高", role: "受け手", kind: "差し戻し", taskId: t.id, title: `${t.createdBy}から差し戻されました`, detail: `「${t.title}」${t.reportNote ? "（" + t.reportNote + "）" : ""}`, action: "やり直して、もう一度報告する" });
+      else if (isDelegated(t) && t.status !== "報告済") {
+        if (!t.ackedOn) add({ id: `task:new:${t.id}`, level: "低", role: "受け手", kind: "新着", taskId: t.id, title: `${t.createdBy}からタスクが来ています`, detail: `「${t.title}」${t.due ? "（期限 " + t.due + "）" : ""}`, action: "内容を確認して「受け取りました」を押す" });
+        if (age >= 2 || overdue) add({ id: `task:rep:${t.id}`, level: age >= 4 || overdue ? "高" : "中", role: "受け手", kind: "報告", taskId: t.id, title: `${t.createdBy}に、早く報告してください（${age}日経過${overdue ? "・期限切れ" : ""}）`, detail: `「${t.title}」`, action: "進み具合を更新して、「報告する」を押す" });
+        if (t.nudgedOn) add({ id: `task:nudge:${t.id}:${t.nudges}`, level: "中", role: "受け手", kind: "催促", taskId: t.id, title: `${t.createdBy}から催促が来ています（${t.nudgedOn}）`, detail: `「${t.title}」`, action: "状況を報告する" });
+      } else if (!isDelegated(t) && overdue && t.status !== "報告済") add({ id: `task:self:${t.id}`, level: "中", role: "自分", kind: "期限切れ", taskId: t.id, title: "自分のタスクの期限が過ぎています", detail: `「${t.title}」（期限 ${t.due}）`, action: "進めるか、期限を決め直す" });
+    }
+    if (t.createdBy === me && isDelegated(t)) {
+      if (t.status === "報告済") add({ id: `task:got:${t.id}`, level: "中", role: "依頼者", kind: "報告が届いた", taskId: t.id, title: `${t.assignee}から報告が届いています`, detail: `「${t.title}」${t.reportNote ? "：" + t.reportNote : ""}`, action: "確認して、完了にするか、差し戻す" });
+      else if (age >= 2 || overdue) add({ id: `task:wait:${t.id}`, level: age >= 4 || overdue ? "高" : "中", role: "依頼者", kind: "預けたまま", taskId: t.id, title: `預けたタスクの報告が、まだ来ていません：${t.assignee}（${age}日${overdue ? "・期限切れ" : ""}）`, detail: `「${t.title}」${t.status === "未着手" && !t.ackedOn ? "（まだ受け取られていません）" : ""}`, action: "催促するか、状況を確認する" });
+    }
+  }
+  return out.sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level]);
+}
+/** 見ている人のタスクの数（自分のもの／預けているもの／報告待ちなど）。完了は数えない。 */
+export function taskCounts(tasks, me) {
+  const open = tasks.filter(t => t.status !== "完了");
+  return { mine: open.filter(t => t.assignee === me).length, newForMe: open.filter(t => t.assignee === me && isDelegated(t) && !t.ackedOn && t.status !== "報告済").length,
+    delegated: open.filter(t => t.createdBy === me && isDelegated(t)).length, reportedToMe: open.filter(t => t.createdBy === me && isDelegated(t) && t.status === "報告済").length };
+}
+
+/* ===================== 商談 → 案件 → 受注・失注（営業の見える化） ===================== */
+export const OUTCOMES = ["案件化", "案件化せず", "検討中"];
+
+/** 商談の数・案件になった数・案件化せず・検討中。案件になったあとの受注・失注・進行中も数える。monthLabel（例「12月」）で、商談の日の月に絞れる。 */
+export function salesFunnel(meetings, cases, monthLabel = null) {
+  const list = meetings.filter(m => !monthLabel || monthLabelOf(m.date) === monthLabel);
+  const total = list.length, converted = list.filter(m => m.outcome === "案件化"), declined = list.filter(m => m.outcome === "案件化せず").length, pending = list.filter(m => m.outcome === "検討中").length;
+  const linked = [...new Set(converted.map(m => m.caseId).filter(Boolean))].map(id => cases.find(c => c.id === id)).filter(Boolean);
+  const won = linked.filter(c => ["受注", "進行中", "請求済", "入金済"].includes(c.status)), lost = linked.filter(c => c.status === "失注"), open = linked.filter(c => c.status === "見積り中" || !c.status);
+  const amount = a => a.reduce((x, c) => x + (isNum(c.amount) ? c.amount : 0), 0);
+  return { total, converted: converted.length, declined, pending, convertRate: ratio(converted.length, total), cases: linked.length, won: won.length, lost: lost.length, open: open.length,
+    wonRate: ratio(won.length, linked.length), lostRate: ratio(lost.length, linked.length), lostAmount: amount(lost), wonAmount: amount(won), openAmount: amount(open) };
+}
+/** 月ごと（商談の日の月）の数。 */
+export function funnelByMonth(meetings, cases, months) {
+  return months.map(m => ({ month: m, ...salesFunnel(meetings, cases, m) })).filter(r => r.total > 0);
+}
+/** 失注・見送りの理由ごとの件数。案件の失注（lossReason）と、案件化せずの商談（lossReason）を合わせる。 */
+export function lossReasons(meetings, cases) {
+  const m = new Map(), add = r => { const k = r || "（理由なし）"; m.set(k, (m.get(k) || 0) + 1); };
+  cases.filter(c => c.status === "失注").forEach(c => add(c.lossReason));
+  meetings.filter(x => x.outcome === "案件化せず").forEach(x => add(x.lossReason));
+  return [...m.entries()].map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count);
+}
+
+/** 商談の文字起こしを、記録の形に整える（規則による。AI ではない）。担当者名・相手・元請けか直接か・物件名・場所を拾い、要望・予算・見積の候補も付ける。 */
+export function structureMeeting(text, templates = [], staff = []) {
+  const t = String(text || ""), base = extractMeeting(t, templates);
+  const speakers = [...new Set([...t.matchAll(/(?:^|\n)\s*([^\s：:\n]{1,12})\s*[：:]/g)].map(m => m[1]))];
+  const staffHere = staff.filter(n => speakers.includes(n) || t.includes(n));
+  const customers = speakers.filter(s => !staff.includes(s));
+  const honor = [...t.matchAll(/([^\s、。「」：:（）()]{1,12}?)(様|さん)/g)].map(m => m[1] + m[2]).filter(x => !staff.some(n => x.startsWith(n)) && !/^(お客様|皆様|元請け)/.test(x));
+  const counterpart = customers.find(c => /(様|さん)$/.test(c)) || honor[0] || customers[0] || "";
+  const viaContractor = /元請け|発注書|管理会社|ゼネコン/.test(t);
+  const contractor = viaContractor ? ((/(元請け[A-Za-zＡ-Ｚ0-9]{0,2})/.exec(t) || [])[1] || "元請け") : "";
+  const property = (/([^\s、。「」：:（）()]{1,14}?(?:邸|マンション|ビル|アパート|店舗)[A-Za-zＡ-Ｚ0-9０-９]{0,4})/.exec(t) || [])[1] || "";
+  const place = ["オンライン", "お客様宅", "事務所", "現地"].find(p => t.includes(p)) || "";
+  return { ...base, speakers, participants: staffHere, counterpart, contractType: viaContractor ? "元請け経由" : "直接", contractor, property, place };
 }

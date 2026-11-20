@@ -21,6 +21,8 @@ export const ICON = {
   cost: "M3 7h18v12H3zM3 11h18M8 3v4M16 3v4",
   trend: "M3 17l6-6 4 4 8-9",
   check: "M5 12.5l4.2 4.2L19 7",
+  task: "M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2",
+  memo: "M5 4h14v16H5zM8 9h8M8 13h8M8 17h5",
   cases: "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 11h18",
   site: "M4 20h16M6 20V10l6-6 6 6v10M10 20v-5h4v5",
   estimate: "M7 3h10a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM9 7h6M9 11h6M9 15h3",
@@ -115,4 +117,19 @@ export function palette() {
     goal: { c1: cssVar("--c-goal2"), c2: cssVar("--c-goal") }, prev: { c1: cssVar("--c-prev"), c2: "#7a5fe0" },
   };
 }
-export const bizColor = id => { const p = palette(); return id === "reform" ? p.sales : p.prev; };
+/** 事業の色：リフォーム＝薄水色、人材紹介＝薄緑（ライトの色味では、少し濃くして見えやすくする）。 */
+export const bizColor = id => {
+  const light = document.documentElement.dataset.theme === "light";
+  if (id === "reform") return light ? { c1: "#8fd8f2", c2: "#3fb0dd" } : { c1: "#c4f3ff", c2: "#7fd8f5" };
+  return light ? { c1: "#9be3b0", c2: "#46bd72" } : { c1: "#d3f9dc", c2: "#8be8a8" };
+};
+
+/** 事業のロゴ（リフォーム＝家と金づち、人材紹介＝2人とつながり）。色は事業の色（薄水色・薄緑）。 */
+export function bizLogo(id, size = 52) {
+  const c = bizColor(id), gid = "bl" + id, dark = id === "reform" ? "#0b3a4a" : "#0d3b24";
+  const glyph = id === "reform"
+    ? `<path d="M14 27 26 16l12 11v13a1 1 0 0 1-1 1H15a1 1 0 0 1-1-1z" fill="none" stroke="${dark}" stroke-width="2.4" stroke-linejoin="round"/><path d="M22 41v-9h8v9" fill="none" stroke="${dark}" stroke-width="2.4" stroke-linejoin="round"/><path d="M33 13l5 5M30 19l8-8" stroke="${dark}" stroke-width="2.6" stroke-linecap="round"/>`
+    : `<circle cx="20" cy="21" r="5" fill="none" stroke="${dark}" stroke-width="2.4"/><circle cx="34" cy="21" r="5" fill="none" stroke="${dark}" stroke-width="2.4"/><path d="M10 40a10 10 0 0 1 20 0M24 40a10 10 0 0 1 20 0" fill="none" stroke="${dark}" stroke-width="2.4" stroke-linecap="round"/><path d="M23 30l4 3 4-3" fill="none" stroke="${dark}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  return `<svg class="biz-logo" width="${size}" height="${size}" viewBox="0 0 52 52" role="img" aria-label="${id === "reform" ? "リフォーム事業のロゴ" : "人材紹介業のロゴ"}"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c.c1}"/><stop offset="1" stop-color="${c.c2}"/></linearGradient><filter id="${gid}g" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3.5"/></filter></defs>
+    <rect x="4" y="5" width="44" height="44" rx="13" fill="${c.c2}" opacity=".45" filter="url(#${gid}g)"/><rect x="3" y="3" width="46" height="46" rx="13" fill="url(#${gid})"/><rect x="3.8" y="3.8" width="44.4" height="44.4" rx="12.4" fill="none" stroke="rgba(255,255,255,.65)" stroke-width="1"/>${glyph}</svg>`;
+}

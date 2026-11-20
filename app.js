@@ -4,6 +4,15 @@ import * as C from "./calc.js";
 import { ROUTES, headHtml, csvFor } from "./pages.js";
 import { esc, svgI, ICON, animateCounts } from "./ui.js";
 import * as P2 from "./pages2.js";
+import * as S3 from "./sites.js";
+import * as MN from "./money.js";
+import * as MM from "./memos.js";
+import * as PP from "./people.js";
+import * as CD from "./casedetail.js";
+import * as TK from "./tasks.js";
+import * as TL from "./talks.js";
+import { savePhoto, hydratePhotos } from "./photos.js";
+import { getAlerts, getMemos, getMeetings } from "./state.js";
 
 const $ = s => document.querySelector(s);
 
@@ -49,7 +58,7 @@ function applyTheme() { document.documentElement.dataset.theme = ["navy", "viole
 
 /* ---------- 描き直し ---------- */
 function currentRoute() {
-  const h = location.hash.replace(/^#\/?/, "");
+  const h = location.hash.replace(/^#\/?/, "").split("?")[0];   // 「?name=…」の部分は、ページの選び方に使わない
   return ROUTES.find(r => r.path === h) || ROUTES.find(r => r.path === "pl");
 }
 function render(keepScroll = true) {
@@ -63,7 +72,21 @@ function render(keepScroll = true) {
   post.forEach(f => f());
   if (!keepScroll) animateCounts($("#page"));   // 数字が増える動きは、ページを開いたときだけ（編集のたびにちらつかせない）
   requestAnimationFrame(() => document.querySelectorAll("#page .cmp .track i").forEach(i => { i.style.width = i.dataset.w + "%"; }));
+  $("#taskBanner").innerHTML = TK.bannerHtml(); $("#dock").innerHTML = TK.dockHtml();
+  hydratePhotos($("#page"));
+  updateBadge();
   window.scrollTo(0, keepScroll ? y : 0);
+}
+function updateBadge() {
+  const set = (path, n, label) => {
+    const a = document.querySelector(`#rail a[data-path="${path}"]`); if (!a) return;
+    let b = a.querySelector(".badge"); if (!b) { b = document.createElement("span"); b.className = "badge"; b.setAttribute("aria-label", label); a.appendChild(b); }
+    b.textContent = n; b.hidden = !n;
+  };
+  if (!state.data) return;
+  set("sites", getAlerts().filter(a => a.kind !== "メモ").length, "対応が必要なアラートの数");
+  set("tasks", TK.attentionCount(), "対応が必要なタスクのお知らせの数");
+  set("memos", getMemos().filter(m => m.status !== "処理済").length, "処理されていないメモの数");
 }
 
 /* ---------- 操作 ---------- */
@@ -134,10 +157,10 @@ document.addEventListener("input", e => {
 document.addEventListener("click", e => {
   const t = e.target.closest("button, a"); if (!t) return;
   if (t.dataset.siteTab) { e.preventDefault(); state.site.tab = t.dataset.siteTab; render(); return; }
-  if (t.dataset.siteOpen) { state.site.sel = t.dataset.siteOpen; state.site.tab = "gantt"; if (location.hash === "#/sites") { e.preventDefault(); render(); } return; }
+  if (t.dataset.siteOpen) { state.site.sel = t.dataset.siteOpen; state.site.tab = "detail"; if (location.hash === "#/sites") { e.preventDefault(); render(); } return; }
   if (t.dataset.stage) { const [id, d] = t.dataset.stage.split(":"); P2.siteStage(id, +d); render(); return; }
   if (t.dataset.taskDone) { P2.taskSetPct(t.dataset.taskDone, 100); render(); toast("工程を完了にしました。"); return; }
-  if (t.id === "fClear") { state.cf = { status: "all", person: "all", contractor: "all", month: "all", q: "" }; render(); return; }
+  if (t.id === "fClear") { state.cf = { tab: state.cf.tab, status: "all", person: "all", contractor: "all", month: "all", q: "" }; render(); return; }
   if (t.id === "estAdd") { P2.estAddLine(null); render(); return; }
   if (t.dataset.estDel !== undefined) { P2.estDelLine(+t.dataset.estDel); render(); return; }
   if (t.id === "estReset") { P2.estReset(); render(); toast("最初の内容に戻しました。"); return; }
@@ -162,6 +185,116 @@ document.addEventListener("submit", e => {
   if (r.error) { msg.className = "msg err"; msg.textContent = r.error; f.elements[r.field]?.setAttribute("aria-invalid", "true"); return; }
   render(); toast(`案件を追加しました（番号 ${r.id}）。`);
 });
+
+/* ---------- 現場進捗：アラート・職人の依頼・日報と写真・着工前チェック ---------- */
+document.addEventListener("click", e => {
+  const t = e.target.closest("button, a"); if (!t) return;
+  if (t.dataset.casesTab) { e.preventDefault(); state.cf.tab = t.dataset.casesTab; render(); return; }
+  if (t.dataset.caseAdd !== undefined) { state.cf.tab = "cases"; render(); const d = document.querySelector("#caseDetails"); if (d) { d.open = true; d.scrollIntoView({ block: "center" }); document.querySelector("#n_name")?.focus(); } return; }
+  if (t.dataset.goTalk !== undefined) { state.cf.tab = "talks"; render(); document.querySelector("#talkFormBox")?.scrollIntoView({ block: "start" }); document.querySelector("#talk_text")?.focus(); return; }
+  if (t.dataset.talkImport) { TL.talkImport(t.dataset.talkImport); render(); document.querySelector("#talkFormBox")?.scrollIntoView({ block: "start" }); toast("録音の文字起こしを取り込みました。内容を確認して「商談を記録する」を押してください。"); return; }
+  if (t.dataset.talkAnalyze !== undefined) { const f = document.querySelector("#talkForm"); TL.talkAnalyze(Object.fromEntries(new FormData(f).entries())); render(); document.querySelector("#talkFormBox")?.scrollIntoView({ block: "start" }); toast("内容を整理しました（規則による。直してから使ってください）。"); return; }
+  if (t.dataset.talkSample !== undefined) { const fd = Object.fromEntries(new FormData(document.querySelector("#talkForm")).entries()), r = TL.talkEstimate(fd.text, fd); if (r.error) { toast(r.error, "err"); return; } location.hash = "#/estimate"; toast(`見積の叩き台を作りました（${r.n}項目）。内容を直してください。`); return; }
+  if (t.dataset.talkEstimate) { const m = getMeetings().find(x => x.id === t.dataset.talkEstimate), r = TL.talkEstimate(m.text, { withWho: m.withWho, attendees: m.attendees }); if (r.error) { toast(r.error, "err"); return; } location.hash = "#/estimate"; toast(`見積の叩き台を作りました（${r.n}項目）。内容を直してください。`); return; }
+  if (t.dataset.talkTocase) { const r = TL.talkToCase(t.dataset.talkTocase); if (r.error) { toast(r.error, "err"); return; } render(); toast("案件にしました（案件管理に入りました）。"); return; }
+  if (t.dataset.talkDecline) { const id = t.dataset.talkDecline, reason = document.querySelector(`[data-decline-reason="${id}"]`)?.value; TL.talkDecline(id, reason); render(); toast("「案件にならず」にしました。理由は失注・見送りの集計に入ります。"); return; }
+  if (t.dataset.voice !== undefined) { startVoice(t); return; }
+  if (t.dataset.dockToggle !== undefined) { state.dock.open = !state.dock.open; render(); return; }
+  if (t.dataset.taskTab) { e.preventDefault(); state.tv.tab = t.dataset.taskTab; render(); return; }
+  if (t.dataset.taskAck) { TK.taskAck(t.dataset.taskAck); render(); toast("受け取りました。進み具合は、自分で更新してください。"); return; }
+  if (t.dataset.taskReport) { const id = t.dataset.taskReport, note = document.querySelector(`[data-task-note="${id}"]`)?.value || ""; TK.taskReport(id, note); render(); toast("報告しました。依頼した人に届きます。"); return; }
+  if (t.dataset.taskConfirm) { TK.taskConfirm(t.dataset.taskConfirm); render(); toast("完了にしました（一覧から消えました）。"); return; }
+  if (t.dataset.taskSelfdone) { TK.taskSelfDone(t.dataset.taskSelfdone); render(); toast("完了にしました。"); return; }
+  if (t.dataset.taskReject) { const id = t.dataset.taskReject, note = document.querySelector(`[data-task-rejnote="${id}"]`)?.value || ""; TK.taskReject(id, note); render(); toast("差し戻しました。"); return; }
+  if (t.dataset.taskNudge) { TK.taskNudge(t.dataset.taskNudge); render(); toast("催促を送りました（相手のタスクに「催促あり」が出ます）。"); return; }
+  if (t.dataset.pickCase) { state.site.pick = state.site.pick === t.dataset.pickCase ? null : t.dataset.pickCase; render(); if (state.site.pick) setTimeout(() => document.querySelector("#quickPanel")?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" }), 50); return; }
+  if (t.dataset.caseOpen) { state.detail.openId = state.detail.openId === t.dataset.caseOpen ? null : t.dataset.caseOpen; state.detail.draft = null; render(); if (state.detail.openId) setTimeout(() => document.querySelector("#caseDetail")?.scrollIntoView({ block: "nearest" }), 50); return; }
+  if (t.dataset.meetingDraft) { const f = document.querySelector("#meetingForm"), res = C.extractMeeting(f.elements.text.value, state.data.estimateTemplates); state.detail.draft = { caseId: t.dataset.meetingDraft, res }; document.querySelector("#draftBox").innerHTML = CD.draftHtml(res, t.dataset.meetingDraft); if (f.elements.result.value === "検討中" && res.resultGuess !== "検討中") f.elements.result.value = res.resultGuess; return; }
+  if (t.dataset.draftEstimate) { CD.draftToEstimate(t.dataset.draftEstimate); location.hash = "#/estimate"; toast("叩き台から見積を作りました。内容を直してください。"); return; }
+  if (t.dataset.ppTab) { e.preventDefault(); state.pp.tab = t.dataset.ppTab; render(); return; }
+  if (t.dataset.ppSort) { PP.ppSort(t.dataset.ppSort); render(); return; }
+  if (t.dataset.ppPick) { PP.ppPick(t.dataset.ppPick); render(); return; }
+  if (t.dataset.memoTab) { e.preventDefault(); state.mv.tab = t.dataset.memoTab; render(); return; }
+  if (t.dataset.memoDone) { MM.memoSetDone(t.dataset.memoDone, true); render(); toast("処理済みにしました。"); return; }
+  if (t.dataset.memoUndo) { MM.memoSetDone(t.dataset.memoUndo, false); render(); toast("未処理に戻しました。"); return; }
+  if (t.dataset.fmSort) { MN.setFmSort(t.dataset.fmSort); render(); return; }
+  if (t.dataset.ack) { S3.ackAlert(t.dataset.ack); render(); toast("確認済みにしました（今日は、この通知を隠します）。"); return; }
+  if (t.dataset.approve) { S3.reportApprove(t.dataset.approve); render(); toast("追加・変更工事を承認済みにしました。"); return; }
+  if (t.dataset.respond) {
+    const [id, kind] = t.dataset.respond.split(":"), memo = document.querySelector(`[data-consult-memo="${id}"]`)?.value || "";
+    S3.dispatchRespond(id, kind, kind === "相談" ? memo.trim() : ""); render();
+    toast(kind === "了承" ? "確認しました。工程表に反映されました。" : "「代表に相談」を送りました。担当者に連絡が届きます。"); return;
+  }
+});
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.dataset.check) { const [id, k] = t.dataset.check.split(":"); S3.checkSet(id, k, t.checked); render(); return; }
+  if (t.dataset.caseField) { const [id, key] = t.dataset.caseField.split(":"), err = CD.caseFieldSet(id, key, t.value); if (err) { toast(err, "err"); t.setAttribute("aria-invalid", "true"); return; } render(); toast("案件の項目を直しました。"); return; }
+  if (t.dataset.taskProg) { TK.taskSetProgress(t.dataset.taskProg, t.value); render(); return; }
+  if (t.id === "meSel" || t.id === "meSel2") { TK.setMe(t.value); render(); toast(`${t.value} さんの画面に切り替えました。`); return; }
+  if (t.id === "mtMonth") { state.mt.month = t.value; render(); return; }
+  if (t.id === "gStatus") { state.site.gf.status = t.value; render(); return; }
+  if (t.id === "gPerson") { state.site.gf.person = t.value; render(); return; }
+  if (t.id === "gRange") { state.site.gr = t.value; render(); return; }
+  if (t.id === "mvCase") { state.mv.caseId = t.value; render(); return; }
+  if (t.id === "mvKind") { state.mv.kind = t.value; render(); return; }
+  if (t.id === "fmMonth") { MN.setFmMonth(t.value); render(); return; }
+  if (t.id === "craftSel") { state.detail.craftsman = t.value; if (location.hash.includes("?")) history.replaceState(null, "", "#/craftsman"); render(); return; }
+});
+document.addEventListener("submit", async e => {
+  const f = e.target;
+  if (f.id === "dispatchForm") {
+    e.preventDefault(); const err = S3.dispatchCreate(Object.fromEntries(new FormData(f).entries())), m = document.querySelector("#dispMsg");
+    if (err) { m.className = "msg err"; m.textContent = err; return; }
+    render(); toast("職人に依頼しました。職人が確認すると、工程表に反映されます。"); return;
+  }
+  if (f.dataset.taskform !== undefined) {
+    e.preventDefault(); const m = f.querySelector("[data-taskmsg]"), r = TK.taskCreate(Object.fromEntries(new FormData(f).entries()));
+    if (r.error) { m.className = "msg err"; m.textContent = r.error; return; }
+    render(); toast(r.self ? "自分のタスクに足しました。" : `${r.to} に頼みました。相手のページに「${state.me}からタスクが来ています」と出ます。`); return;
+  }
+  if (f.id === "talkForm") {
+    e.preventDefault(); const m = document.querySelector("#talkMsg"), fd = Object.fromEntries(new FormData(f).entries()), audio = f.elements.audio?.files?.[0]?.name || "";
+    if (!state.mt.structured) TL.talkAnalyze(fd);
+    const r = TL.talkSave({ ...state.mt.form, ...fd, contractType: fd.contractType, outcome: fd.outcome }, audio); if (r.error) { m.className = "msg err"; m.textContent = r.error; return; }
+    render(); toast("商談を記録しました。" + (r.note || "")); return;
+  }
+  if (f.id === "meetingForm") {
+    e.preventDefault(); const m = document.querySelector("#mtMsg"), fd = Object.fromEntries(new FormData(f).entries()), audio = f.elements.audio?.files?.[0]?.name || "";
+    const r = CD.meetingAdd(fd, audio); if (r.error) { m.className = "msg err"; m.textContent = r.error; return; }
+    state.detail.draft = null; render(); toast(r.note ? "商談を記録しました。" + r.note : "商談を記録しました。"); return;
+  }
+  if (f.id === "memoForm") {
+    e.preventDefault(); const m = document.querySelector("#memoMsg"), fd = Object.fromEntries(new FormData(f).entries()), files = [...(f.elements.photos?.files || [])], ids = [], bad = [];
+    for (const file of files) { try { ids.push(await savePhoto(file)); } catch (er) { bad.push(`${file.name}：${er.message}`); } }
+    const r = MM.memoAdd(fd, ids);
+    if (r.error) { m.className = "msg err"; m.textContent = r.error; return; }
+    render(); toast(bad.length ? `メモを残しました。写真の一部は保存できませんでした（${bad.join("、")}）。` : "メモを残しました。", bad.length ? "err" : "ok"); return;
+  }
+  if (f.id === "reportForm") {
+    e.preventDefault(); const m = document.querySelector("#repMsg"), fd = Object.fromEntries(new FormData(f).entries()), files = [...(f.elements.photos?.files || [])];
+    const ids = [], bad = [];
+    for (const file of files) { try { ids.push(await savePhoto(file)); } catch (er) { bad.push(`${file.name}：${er.message}`); } }
+    const r = S3.reportAdd(fd, ids);
+    if (r.error) { m.className = "msg err"; m.textContent = r.error; return; }
+    state.site.sel = fd.caseId; render(); toast(bad.length ? `日報を上げました。写真の一部は保存できませんでした（${bad.join("、")}）。` : "日報を上げました。", bad.length ? "err" : "ok"); return;
+  }
+});
+
+/* ---------- 音声入力（ブラウザの音声認識。同意が要る） ---------- */
+let rec = null;
+function startVoice(btn) {
+  const ta = document.querySelector("#talk_text"), ok = document.querySelector("#voiceConsent")?.checked, label = "🎙 音声で入力する";
+  if (rec) { rec.stop(); return; }
+  if (!ok) { toast("音声入力を使うには、同意のチェックを入れてください。", "err"); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast("このブラウザは音声入力に対応していません。録音の文字起こしを貼り付けるか、クラウド録音の取り込みを使ってください。", "err"); return; }
+  rec = new SR(); rec.lang = "ja-JP"; rec.continuous = true; rec.interimResults = false;
+  rec.onresult = ev => { for (let i = ev.resultIndex; i < ev.results.length; i++) if (ev.results[i].isFinal) ta.value += ev.results[i][0].transcript + "。\n"; };
+  rec.onerror = ev => { toast(`音声入力でエラーが出ました（${ev.error}）。マイクの許可を確かめてください。`, "err"); };
+  rec.onend = () => { rec = null; btn.textContent = label; };
+  try { rec.start(); btn.textContent = "■ 止める（録音中）"; } catch (er) { rec = null; toast("音声入力を始められませんでした。", "err"); }
+}
 
 addEventListener("hashchange", () => { render(false); $("#main").focus({ preventScroll: true }); });
 let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { drawDots(); render(); }, 150); });

@@ -1,10 +1,17 @@
 /* 各ページの中身。どのページも state と calc の数字だけから作る（固定の数字は書かない）。 */
 import * as C from "./calc.js";
-import { state, getScope, store } from "./state.js";
-import { esc, ICON, svgI, tag, diffTag, spark, pbar, bar, kpi, donut, fmtMan, fmtPct, bizColor, palette } from "./ui.js";
+import { state, getScope, store, getAlerts, getCases, getMemos, getReports } from "./state.js";
+import { esc, ICON, svgI, tag, diffTag, spark, pbar, bar, kpi, donut, fmtMan, fmtPct, bizColor, palette, bizLogo } from "./ui.js";
 import { drawChart, metricLabel } from "./chart.js";
 import { insights, bizInsights } from "./insights.js";
-import { renderCases, renderSites, renderEstimate, casesCsv, sitesCsv, estCsv } from "./pages2.js";
+import { renderCases, renderEstimate, casesCsv, sitesCsv, estCsv } from "./pages2.js";
+import { renderSites, renderCraftsman, alertListHtml } from "./sites.js";
+import { siteMoneyHtml } from "./money.js";
+import { renderMemos, memosCsv } from "./memos.js";
+import { renderPeople, peopleCsv } from "./people.js";
+import { caseDetailHtml } from "./casedetail.js";
+import { renderTasks } from "./tasks.js";
+import { topBarHtml, renderTalks } from "./talks.js";
 
 const $ = s => document.querySelector(s);
 const SCOPE_NAME = { all: "全事業（統合）", reform: "リフォーム事業", staffing: "人材紹介業" };
@@ -152,18 +159,37 @@ export function renderHome(route, post) {
     kpi({ tone: "gold", icon: "target", label: "売上の目標進捗", value: fmtPct(m.sales.progress).replace("%", ""), unit: "%", sub: `目標 ${fmtMan(m.sales.target)}万円`, tags: diffTag("計画との差", m.sales.diff), barHtml: pbar(m.sales.progress, m.sales.planProgress, "売上の目標進捗"), href: "#/goals" }),
     kpi({ tone: "teal", icon: "layers", label: "累計利益", value: fmtMan(m.profit.cum), unit: "万円", sub: `利益率 ${fmtPct(sm.profitRate)}`, tags: state.showYoY ? tag("前年累計比", m.profit.cumYoyPct) : "", href: "#/pl" }),
   ].join("");
+  const alertsAll = getAlerts(), cases = getCases(), memosOpen = getMemos().filter(m => m.status !== "処理済").length;
+  const working = cases.filter(c => c.status === "進行中" && c.stage === 3), posted = working.filter(c => getReports().some(r => r.caseId === c.id && r.date === state.data.asOf)).length;
+  const check = `<section class="today-strip" aria-label="今日のチェック"><a href="#/sites" class="today ${alertsAll.some(a => a.level === "高") ? "hot" : ""}"><b>${alertsAll.filter(a => a.kind !== "メモ").length}</b><span>対応が必要なアラート</span><small>高 ${alertsAll.filter(a => a.level === "高" && a.kind !== "メモ").length}件</small></a>
+    <a href="#/memos" class="today ${memosOpen ? "warn" : ""}"><b>${memosOpen}</b><span>処理されていないメモ</span><small>リマインド ${alertsAll.filter(a => a.kind === "メモ").length}件</small></a>
+    <a href="#/sites" class="today"><b>${posted}/${working.length}</b><span>今日の日報（施工中）</span><small>${posted === working.length ? "すべて提出済み" : "未提出あり"}</small></a>
+    <a href="#/cases" class="today"><b>${cases.filter(c => c.status === "見積り中").length}</b><span>見積り中の案件</span><small>返事待ちの確認へ</small></a></section>`;
   const bizCards = state.data.businesses.map(b => {
-    const bs = getScope(b.id), bm = C.summarize(bs).metrics;
-    return `<a class="card biz-card" href="#/pl/${b.id}" style="color:inherit"><h3>${svgI(ICON[b.id])} ${esc(b.name)}</h3><div class="big">${fmtMan(bm.sales.cum)}<small style="font-size:14px"> 万円（累計売上）</small></div>
-      <div class="tags">${diffTag("計画との差", bm.sales.diff)}${tag("前年累計比", bm.sales.cumYoyPct)}</div>${pbar(bm.sales.progress, bm.sales.planProgress, b.name + "の売上進捗")}
-      <div class="sub2" style="font-size:12.5px;color:var(--text-secondary)">目標進捗 ${fmtPct(bm.sales.progress)}／累計利益 ${fmtMan(bm.profit.cum)}万円</div></a>`;
+    const bs = getScope(b.id), sm = C.summarize(bs), bm = sm.metrics, c = bizColor(b.id), L = bs.L, mo = bs.months[L];
+    const own = b.id === "reform" ? cases : [];
+    let extra = "";
+    if (b.id === "reform") {
+      const act = own.filter(x => x.status === "進行中").length, wait = own.filter(x => x.status === "受注").length, quo = own.filter(x => x.status === "見積り中").length, al = alertsAll.filter(a => a.caseId && own.some(x => x.id === a.caseId) && a.kind !== "メモ");
+      extra = `<div class="bz-facts"><div><small>施工中の現場</small><b>${act}件</b></div><div><small>着工待ち</small><b>${wait}件</b></div><div><small>見積り中</small><b>${quo}件</b></div><div class="${al.length ? "warn" : ""}"><small>要対応</small><b>${al.length}件</b></div></div>`;
+    } else {
+      const ts = C.teamStats(state.data.advisors, L).total;
+      extra = `<div class="bz-facts"><div><small>面談</small><b>${ts.interviews}件</b></div><div><small>成約</small><b>${ts.hires}件</b></div><div><small>成約率</small><b>${fmtPct(ts.hireRate)}</b></div><div><small>平均単価</small><b>${fmtMan(ts.unitPrice)}万円</b></div></div>`;
+    }
+    const links = b.id === "reform" ? [["損益を見る", "#/pl/reform"], ["現場の進捗", "#/sites"], ["担当者別", "#/staff"]] : [["損益を見る", "#/pl/staffing"], ["活動分析", "#/activity"], ["担当者別", "#/staff"]];
+    return `<article class="card biz-home" style="--bz1:${c.c1};--bz2:${c.c2}"><div class="bz-head">${bizLogo(b.id)}<div><h3>${esc(b.name)}</h3><p class="bz-tag">${b.id === "reform" ? "工事の受注から引き渡しまで" : "求人・面談から成約まで"}</p></div><div class="bz-spark">${spark(lastN(bs.sales, L), c.c2, "bz" + b.id)}</div></div>
+      <div class="bz-main"><div><small>累計の売上（期初〜${mo}）</small><div class="big">${fmtMan(bm.sales.cum)}<span>万円</span></div></div><div class="bz-chips">${diffTag("計画との差", bm.sales.diff)}${tag("前年累計比", bm.sales.cumYoyPct)}${tag("前月比", bm.sales.momPct)}</div></div>
+      <div class="bz-prog"><div class="r2"><span>売上の目標進捗</span><b>${fmtPct(bm.sales.progress)}</b></div>${pbar(bm.sales.progress, bm.sales.planProgress, b.name + "の売上進捗", "gold")}<div class="r2"><span>目標 ${fmtMan(bm.sales.target)}万円・計画どおりなら ${fmtPct(bm.sales.planProgress)}</span><span>${mo}の売上 ${fmtMan(bm.sales.now)}万円</span></div></div>
+      <div class="bz-profit"><div><small>累計の利益</small><b class="${bm.profit.cum >= 0 ? "up" : "down"}">${fmtMan(bm.profit.cum, { sign: true })}万円</b></div><div><small>利益率</small><b>${fmtPct(sm.profitRate)}</b></div><div><small>原価率</small><b>${fmtPct(sm.costRate)}</b></div></div>${extra}
+      <div class="bz-links">${links.map(([t, h]) => `<a class="btn small" href="${h}">${t}</a>`).join("")}</div></article>`;
   }).join("");
   const list = [...bizInsights(state.data, state.overrides), ...insights("all")].slice(0, 4);
   const finds = list.map(f => findingHtml(f)).join("");
   const quick = ROUTES.filter(r => !["home"].includes(r.path)).slice(0, 12).map(r => `<a href="#/${r.path}">${svgI(ICON[r.icon])}<span>${esc(r.nav)}</span></a>`).join("");
   void post;
-  return `<section class="kpis k5" aria-label="主要な数字">${cards}</section>
+  return `<section class="kpis k5" aria-label="主要な数字">${cards}</section>${check}
     <section class="grid2">${bizCards}</section>
+    <section class="card panel"><h2 class="ttl">現場でいま対応が必要なこと（アラート）</h2>${alertListHtml(getAlerts(), { limit: 4 })}<div class="tools"><a class="btn small" href="#/sites">現場進捗状況で全部見る</a></div></section>
     <section class="card panel"><h2 class="ttl">いま気をつけたいこと</h2>${finds}<p class="note">AIは未接続です。数字から決まった規則で作っています。</p></section>
     <section><h2 class="ttl" style="margin:0 0 10px">ページへ移る</h2><div class="quick">${quick}</div></section>`;
 }
@@ -203,6 +229,7 @@ export function renderSales(route, post) {
   return `${`<section class="kpis k5" aria-label="売上の主な数字">${kpis}</section>`}
     <section class="grid">${chartCard(s, { metricFixed: "sales" })}${compose}
       <article class="card compare" aria-labelledby="bzTitle"><h2 class="ttl" id="bzTitle">事業ごとの伸び</h2><div style="display:grid;gap:12px">${state.data.businesses.map(b => { const bm = C.summarize(getScope(b.id)).metrics.sales; return `<div class="cmp"><div class="r"><span>${esc(b.name)}</span><span>${fmtMan(bm.cum)}万円</span></div>${pbar(bm.progress, bm.planProgress, b.name)}<div class="f"><span>目標進捗 ${fmtPct(bm.progress)}</span><span class="tags">${state.showYoY ? tag("前年累計比", bm.cumYoyPct) : ""}${state.showMoM ? tag("前月比", bm.momPct) : ""}</span></div></div>`; }).join("")}</div></article></section>
+    ${siteMoneyHtml()}
     <section class="card panel"><h2 class="ttl">月ごとの売上（万円）</h2>${tableWrap(`<table class="tbl"><caption class="sr-only" style="position:absolute;left:-9999px">月ごとの売上</caption><thead>${head}</thead><tbody>${rows}</tbody></table>`)}</section>`;
 }
 
@@ -316,15 +343,18 @@ function emptyHtml() { return `<div class="card empty">実績の数字がまだ�
 /* ---------- ページの一覧 ---------- */
 export const ROUTES = [
   { path: "home", nav: "ホーム", icon: "home", eyebrow: "OVERVIEW", title: "経営ホーム", desc: "全事業の売上・原価・利益・目標進捗のまとめ。気になる所から各ページへ移れます。", ctrl: ["compare", "refresh"], render: renderHome, csv: "pl" },
-  { path: "cases", nav: "案件管理", icon: "cases", eyebrow: "CASE MANAGEMENT", title: "案件管理", desc: "案件の一覧と状況、受注額・粗利、月ごとの集計を管理します。", ctrl: ["refresh", "csv"], render: renderCases, csv: "cases" },
+  { path: "tasks", nav: "タスク", icon: "task", eyebrow: "TASKS", title: "タスク（自分のタスク・預けたタスク）", desc: "自分のタスクと、人に預けたタスクを見ます。頼む・受ける・報告する・確認するが、ここでできます。", ctrl: ["refresh"], render: renderTasks },
+  { path: "cases", nav: "案件管理", icon: "cases", eyebrow: "CASE MANAGEMENT", title: "案件管理", desc: "案件の一覧と状況、受注額・粗利、月ごとの集計を管理します。商談の記録から、案件になったか・失注したかも見られます。", ctrl: ["refresh", "csv"], render: (r, post) => topBarHtml() + (state.cf.tab === "talks" ? renderTalks() : renderCases(r, post) + caseDetailHtml()), csv: "cases" },
   { path: "sites", nav: "現場進捗状況", icon: "site", eyebrow: "SITE PROGRESS", title: "現場進捗状況", desc: "現場ごとの進み具合と、工程表を確認します。工程の流れは仮です。", ctrl: ["refresh", "csv"], render: renderSites, csv: "sites" },
+  { path: "craftsman", nav: "職人の確認ページ", icon: "person", sub: true, eyebrow: "CRAFTSMAN", title: "職人の確認ページ", desc: "職人が、日程の依頼を確認するページの見本です。ボタンを1回押すだけで、工程表に反映されます。", ctrl: ["refresh"], render: renderCraftsman },
   { path: "estimate", nav: "見積もり作成", icon: "estimate", eyebrow: "ESTIMATE", title: "見積もり作成", desc: "明細から、諸経費・値引き・消費税・粗利を自動で計算し、見積書を作ります。", ctrl: [], render: renderEstimate, csv: "estimate" },
+  { path: "memos", nav: "メモ", icon: "memo", eyebrow: "MEMO", title: "メモ（現場の小さな記録）", desc: "現場でちょっと残したいことを、すぐ書き残す場所です。処理されていないメモは、リマインドします。", ctrl: ["refresh", "csv"], render: renderMemos, csv: "memos" },
   { path: "sales", nav: "売上分析", icon: "sales", eyebrow: "SALES ANALYTICS", title: "売上分析", desc: "売上の推移を、前月・前年・計画と比べます。事業ごとの伸びも見られます。", ctrl: ["range", "compare", "refresh", "csv"], render: renderSales, csv: "sales" },
   { path: "pl", nav: "損益分析", icon: "pl", eyebrow: "PROFIT ANALYTICS", title: "損益分析（全事業）", desc: "売上・原価（資材費と人件費）・利益と、目標に対する進捗を確認できます。", ctrl: ["range", "compare", "mode", "refresh", "csv"], scope: "all", render: renderPL, csv: "pl" },
   { path: "pl/reform", nav: "リフォーム事業", icon: "reform", sub: true, eyebrow: "PROFIT ANALYTICS", title: "損益分析（リフォーム事業）", desc: "リフォーム事業の売上・原価・利益と、目標に対する進捗です。", ctrl: ["range", "compare", "mode", "refresh", "csv"], scope: "reform", render: renderPL, csv: "pl" },
   { path: "pl/staffing", nav: "人材紹介業", icon: "staffing", sub: true, eyebrow: "PROFIT ANALYTICS", title: "損益分析（人材紹介業）", desc: "人材紹介業の売上・原価・利益と、目標に対する進捗です。", ctrl: ["range", "compare", "mode", "refresh", "csv"], scope: "staffing", render: renderPL, csv: "pl" },
   { path: "activity", nav: "活動分析", icon: "act", eyebrow: "ACTIVITY", title: "活動分析", desc: "売上につながる活動の件数と、段階ごとの通過率を事業別に見ます。", ctrl: ["refresh", "csv"], render: renderActivity, csv: "activity" },
-  { path: "staff", nav: "担当者別", icon: "person", eyebrow: "BY STAFF", title: "担当者別", desc: "担当者ごとの売上・人件費・利益を比べます。", ctrl: ["refresh", "csv"], render: renderStaff, csv: "staff" },
+  { path: "staff", nav: "担当者別", icon: "person", eyebrow: "BY STAFF", title: "担当者別（経営の分析）", desc: "担当者ごとの数字を、経営が分析的に見ます。リフォームは売上・コスト・利益、人材紹介のアドバイザーは面談・時間・単価・成約・売上です。", ctrl: ["refresh", "csv"], render: renderPeople, csv: "people" },
   { path: "goals", nav: "目標・予実", icon: "goal", eyebrow: "GOALS & FORECAST", title: "目標・予実", desc: "目標額と実績・計画の差、年間の見込みを確認します。目標額はここで変えられます。", ctrl: ["compare", "refresh", "csv"], render: renderGoals, csv: "goals" },
   { path: "report", nav: "レポート", icon: "report", eyebrow: "REPORT", title: "レポート", desc: "月ごとのまとめを作ります。印刷と CSV 出力ができます。", ctrl: ["refresh", "csv"], render: renderReport, csv: "report" },
   { path: "ai", nav: "AI分析", icon: "ai", eyebrow: "AI INSIGHT", title: "AI分析", desc: "数字から、注意する点と良い点、次の一手を出します。", ctrl: ["refresh"], render: renderAI, ai: true },
@@ -349,6 +379,8 @@ export function headHtml(r) {
 
 /* ---------- CSV ---------- */
 export function csvFor(r) {
+  if (r.csv === "memos") return memosCsv();
+  if (r.csv === "people") return peopleCsv();
   if (r.csv === "cases") return casesCsv();
   if (r.csv === "sites") return sitesCsv();
   if (r.csv === "estimate") return estCsv();
