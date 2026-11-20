@@ -21,6 +21,9 @@ export const ICON = {
   cost: "M3 7h18v12H3zM3 11h18M8 3v4M16 3v4",
   trend: "M3 17l6-6 4 4 8-9",
   check: "M5 12.5l4.2 4.2L19 7",
+  cases: "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 11h18",
+  site: "M4 20h16M6 20V10l6-6 6 6v10M10 20v-5h4v5",
+  estimate: "M7 3h10a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM9 7h6M9 11h6M9 15h3",
 };
 export const svgI = d => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
 

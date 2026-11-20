@@ -21,6 +21,24 @@ export const state = {
   overrides: store.get("targets", {}),
   updatedAt: null,
   theme: store.get("theme", "navy"),
+  // 案件管理・現場進捗・見積（編集内容はこのブラウザにだけ保存）
+  cf: { status: "all", person: "all", contractor: "all", month: "all", q: "" },
+  site: { tab: "list", sel: null },
+  edits: store.get("caseEdits", { status: {}, gross: {}, stage: {}, added: [] }),
+  taskEdits: store.get("taskEdits", {}),
+  est: store.get("estimate", null),
 };
+
+/** 元の案件に、画面での編集（状況・粗利・工程・追加した案件）を重ねたもの。 */
+export function getCases() {
+  const e = state.edits, te = state.taskEdits;
+  const base = state.data.cases.map(c => ({
+    ...c, status: e.status[c.id] ?? c.status, gross: Object.prototype.hasOwnProperty.call(e.gross, c.id) ? e.gross[c.id] : c.gross,
+    stage: e.stage[c.id] ?? c.stage, tasks: c.tasks.map((t, i) => ({ ...t, done: te[c.id + ":" + i] ?? t.done })),
+  }));
+  const added = (e.added || []).map(c => ({ ...c, status: e.status[c.id] ?? c.status, gross: Object.prototype.hasOwnProperty.call(e.gross, c.id) ? e.gross[c.id] : c.gross, stage: e.stage[c.id] ?? c.stage, tasks: c.tasks || [] }));
+  return [...base, ...added];
+}
+export const saveEdits = () => { store.set("caseEdits", state.edits); store.set("taskEdits", state.taskEdits); };
 
 export const getScope = sc => C.buildScope(state.data, sc, state.overrides);

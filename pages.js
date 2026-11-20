@@ -4,6 +4,7 @@ import { state, getScope, store } from "./state.js";
 import { esc, ICON, svgI, tag, diffTag, spark, pbar, bar, kpi, donut, fmtMan, fmtPct, bizColor, palette } from "./ui.js";
 import { drawChart, metricLabel } from "./chart.js";
 import { insights, bizInsights } from "./insights.js";
+import { renderCases, renderSites, renderEstimate, casesCsv, sitesCsv, estCsv } from "./pages2.js";
 
 const $ = s => document.querySelector(s);
 const SCOPE_NAME = { all: "全事業（統合）", reform: "リフォーム事業", staffing: "人材紹介業" };
@@ -159,7 +160,7 @@ export function renderHome(route, post) {
   }).join("");
   const list = [...bizInsights(state.data, state.overrides), ...insights("all")].slice(0, 4);
   const finds = list.map(f => findingHtml(f)).join("");
-  const quick = ROUTES.filter(r => !["home"].includes(r.path)).slice(0, 8).map(r => `<a href="#/${r.path}">${svgI(ICON[r.icon])}<span>${esc(r.nav)}</span></a>`).join("");
+  const quick = ROUTES.filter(r => !["home"].includes(r.path)).slice(0, 12).map(r => `<a href="#/${r.path}">${svgI(ICON[r.icon])}<span>${esc(r.nav)}</span></a>`).join("");
   void post;
   return `<section class="kpis k5" aria-label="主要な数字">${cards}</section>
     <section class="grid2">${bizCards}</section>
@@ -315,6 +316,9 @@ function emptyHtml() { return `<div class="card empty">実績の数字がまだ�
 /* ---------- ページの一覧 ---------- */
 export const ROUTES = [
   { path: "home", nav: "ホーム", icon: "home", eyebrow: "OVERVIEW", title: "経営ホーム", desc: "全事業の売上・原価・利益・目標進捗のまとめ。気になる所から各ページへ移れます。", ctrl: ["compare", "refresh"], render: renderHome, csv: "pl" },
+  { path: "cases", nav: "案件管理", icon: "cases", eyebrow: "CASE MANAGEMENT", title: "案件管理", desc: "案件の一覧と状況、受注額・粗利、月ごとの集計を管理します。", ctrl: ["refresh", "csv"], render: renderCases, csv: "cases" },
+  { path: "sites", nav: "現場進捗状況", icon: "site", eyebrow: "SITE PROGRESS", title: "現場進捗状況", desc: "現場ごとの進み具合と、工程表を確認します。工程の流れは仮です。", ctrl: ["refresh", "csv"], render: renderSites, csv: "sites" },
+  { path: "estimate", nav: "見積もり作成", icon: "estimate", eyebrow: "ESTIMATE", title: "見積もり作成", desc: "明細から、諸経費・値引き・消費税・粗利を自動で計算し、見積書を作ります。", ctrl: [], render: renderEstimate, csv: "estimate" },
   { path: "sales", nav: "売上分析", icon: "sales", eyebrow: "SALES ANALYTICS", title: "売上分析", desc: "売上の推移を、前月・前年・計画と比べます。事業ごとの伸びも見られます。", ctrl: ["range", "compare", "refresh", "csv"], render: renderSales, csv: "sales" },
   { path: "pl", nav: "損益分析", icon: "pl", eyebrow: "PROFIT ANALYTICS", title: "損益分析（全事業）", desc: "売上・原価（資材費と人件費）・利益と、目標に対する進捗を確認できます。", ctrl: ["range", "compare", "mode", "refresh", "csv"], scope: "all", render: renderPL, csv: "pl" },
   { path: "pl/reform", nav: "リフォーム事業", icon: "reform", sub: true, eyebrow: "PROFIT ANALYTICS", title: "損益分析（リフォーム事業）", desc: "リフォーム事業の売上・原価・利益と、目標に対する進捗です。", ctrl: ["range", "compare", "mode", "refresh", "csv"], scope: "reform", render: renderPL, csv: "pl" },
@@ -345,6 +349,9 @@ export function headHtml(r) {
 
 /* ---------- CSV ---------- */
 export function csvFor(r) {
+  if (r.csv === "cases") return casesCsv();
+  if (r.csv === "sites") return sitesCsv();
+  if (r.csv === "estimate") return estCsv();
   const s = getScope(r.scope || "all"), L = s.L, rows = [];
   const kind = r.csv || "pl";
   if (kind === "staff") {

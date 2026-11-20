@@ -3,6 +3,7 @@ import { state, store } from "./state.js";
 import * as C from "./calc.js";
 import { ROUTES, headHtml, csvFor } from "./pages.js";
 import { esc, svgI, ICON, animateCounts } from "./ui.js";
+import * as P2 from "./pages2.js";
 
 const $ = s => document.querySelector(s);
 
@@ -60,7 +61,7 @@ function render(keepScroll = true) {
   const post = [];
   $("#page").innerHTML = r.render(r, post);
   post.forEach(f => f());
-  animateCounts($("#page"));
+  if (!keepScroll) animateCounts($("#page"));   // 数字が増える動きは、ページを開いたときだけ（編集のたびにちらつかせない）
   requestAnimationFrame(() => document.querySelectorAll("#page .cmp .track i").forEach(i => { i.style.width = i.dataset.w + "%"; }));
   window.scrollTo(0, keepScroll ? y : 0);
 }
@@ -115,6 +116,52 @@ function download() {
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" })); a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
 }
+
+/* ---------- 案件管理・現場進捗・見積の操作 ---------- */
+function toast(text, cls = "ok") {
+  let t = $("#toast"); if (!t) { t = document.createElement("div"); t.id = "toast"; t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+  t.textContent = text; t.dataset.cls = cls; t.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("on"), 3500);
+}
+function updateEstimateView() {
+  const e = state.est; if (!e || !$("#estSummary")) return;
+  $("#estSummary").innerHTML = P2.estSummaryHtml(e); $("#estPreview").innerHTML = P2.estPreviewHtml(e);
+  document.querySelectorAll(".line-amt").forEach(td => { td.textContent = Math.floor(0 + (Number(e.lines[+td.dataset.line]?.qty) > 0 && Number(e.lines[+td.dataset.line]?.price) >= 0 ? Number(e.lines[+td.dataset.line].qty) * Number(e.lines[+td.dataset.line].price) : 0)).toLocaleString("ja-JP"); });
+}
+document.addEventListener("input", e => {
+  const t = e.target; if (!t.dataset || t.dataset.est === undefined) return;
+  P2.estSet(t.dataset.est, t.value); updateEstimateView();
+});
+document.addEventListener("click", e => {
+  const t = e.target.closest("button, a"); if (!t) return;
+  if (t.dataset.siteTab) { e.preventDefault(); state.site.tab = t.dataset.siteTab; render(); return; }
+  if (t.dataset.siteOpen) { state.site.sel = t.dataset.siteOpen; state.site.tab = "gantt"; if (location.hash === "#/sites") { e.preventDefault(); render(); } return; }
+  if (t.dataset.stage) { const [id, d] = t.dataset.stage.split(":"); P2.siteStage(id, +d); render(); return; }
+  if (t.dataset.taskDone) { P2.taskSetPct(t.dataset.taskDone, 100); render(); toast("工程を完了にしました。"); return; }
+  if (t.id === "fClear") { state.cf = { status: "all", person: "all", contractor: "all", month: "all", q: "" }; render(); return; }
+  if (t.id === "estAdd") { P2.estAddLine(null); render(); return; }
+  if (t.dataset.estDel !== undefined) { P2.estDelLine(+t.dataset.estDel); render(); return; }
+  if (t.id === "estReset") { P2.estReset(); render(); toast("最初の内容に戻しました。"); return; }
+  if (t.id === "estPrint") { window.print(); return; }
+  if (t.id === "estCsv") { const { name, text } = P2.estCsv(); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); return; }
+  if (t.id === "estRegister") { const r = P2.estRegister(); if (r.error) { const m = $("#estMsg"); m.className = "msg err"; m.textContent = r.error; } else { const m = $("#estMsg"); m.className = "msg ok"; m.textContent = `案件管理に登録しました（番号 ${r.id}・見積り中）。`; toast("案件に登録しました。"); } return; }
+});
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.dataset.filter) { state.cf[t.dataset.filter] = t.value; render(); return; }
+  if (t.dataset.caseStatus) { P2.caseSetStatus(t.dataset.caseStatus, t.value); render(); toast("状況を変えました。"); return; }
+  if (t.dataset.caseGross !== undefined) { const err = P2.caseSetGross(t.dataset.caseGross, t.value); if (err) { toast(err, "err"); t.setAttribute("aria-invalid", "true"); return; } render(); return; }
+  if (t.id === "siteSel") { state.site.sel = t.value; render(); return; }
+  if (t.dataset.taskPct) { const err = P2.taskSetPct(t.dataset.taskPct, t.value); if (err) { toast(err, "err"); return; } render(); return; }
+  if (t.id === "estTpl") { if (t.value !== "") { P2.estAddLine(state.data.estimateTemplates[+t.value]); render(); } return; }
+});
+document.addEventListener("submit", e => {
+  if (e.target.id !== "caseForm") return;
+  e.preventDefault();
+  const f = e.target, fd = Object.fromEntries(new FormData(f).entries()), r = P2.caseAdd(fd), msg = $("#caseMsg");
+  f.querySelectorAll("[aria-invalid]").forEach(i => i.removeAttribute("aria-invalid"));
+  if (r.error) { msg.className = "msg err"; msg.textContent = r.error; f.elements[r.field]?.setAttribute("aria-invalid", "true"); return; }
+  render(); toast(`案件を追加しました（番号 ${r.id}）。`);
+});
 
 addEventListener("hashchange", () => { render(false); $("#main").focus({ preventScroll: true }); });
 let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { drawDots(); render(); }, 150); });

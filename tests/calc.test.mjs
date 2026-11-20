@@ -126,3 +126,74 @@ test("月ごとの内訳：資材費＋人件費＋利益＝売上（全範囲�
     }
   }
 });
+
+test("案件：状況別の件数の合計＝全件、金額の合計＝全金額", () => {
+  const sm = C.statusSummary(data.cases);
+  assert.equal(Object.values(sm).reduce((a, v) => a + v.count, 0), data.cases.length);
+  near(Object.values(sm).reduce((a, v) => a + v.amount, 0), data.cases.reduce((a, c) => a + c.amount, 0));
+});
+
+test("案件：月の表には「受注・進行中・請求済・入金済」だけ入る（見積り中・失注・空欄は入らない）", () => {
+  const rows = C.monthlyCases(data.cases, ["10月", "11月", "12月", "1月"]);
+  const n = rows.reduce((a, r) => a + r.count, 0);
+  assert.equal(n, data.cases.filter(c => C.MONTH_VISIBLE.includes(c.status) && ["10月", "11月", "12月", "1月"].includes(c.month)).length);
+  for (const r of rows) assert.ok(r.invoicedOnly <= r.invoicedPaid && r.invoicedPaid <= r.amount);
+});
+
+test("案件：粗利が入っていない受注済み案件を数える／粗利率", () => {
+  const miss = C.grossMissing(data.cases);
+  assert.equal(miss, data.cases.filter(c => C.MONTH_VISIBLE.includes(c.status) && c.gross == null).length);
+  assert.ok(miss > 0);
+  near(C.caseGrossRate({ amount: 200, gross: 50 }), 25);
+  assert.equal(C.caseGrossRate({ amount: 0, gross: 5 }), null);
+  assert.equal(C.caseGrossRate({ amount: 100, gross: null }), null);
+});
+
+test("工程表：日付の計算・状態・現場の進み具合", () => {
+  assert.equal(C.dayDiff("2026-12-01", "2026-12-18"), 17);
+  assert.equal(C.addDays("2026-12-30", 3), "2027-01-02");
+  const t = { start: "2026-12-10", end: "2026-12-19", done: 50 };
+  near(C.expectedProgress(t, "2026-12-14"), 50);
+  assert.equal(C.expectedProgress(t, "2026-12-01"), 0);
+  assert.equal(C.expectedProgress(t, "2027-01-01"), 100);
+  assert.equal(C.taskState({ ...t, done: 100 }, "2026-12-30"), "完了");
+  assert.equal(C.taskState(t, "2026-12-20"), "遅れ");
+  assert.equal(C.taskState(t, "2026-12-05"), "未着手");
+  assert.equal(C.taskState({ ...t, done: 10 }, "2026-12-17"), "遅れ気味");
+  assert.equal(C.taskState({ ...t, done: 80 }, "2026-12-17"), "進行中");
+});
+
+test("工程表：現場の進み具合は0〜100％、計画との差は 実績 − 計画", () => {
+  for (const c of data.cases.filter(x => x.tasks.length)) {
+    const p = C.siteProgress(c.tasks, data.asOf);
+    assert.ok(p.actual >= 0 && p.actual <= 100 && p.planned >= 0 && p.planned <= 100);
+    near(p.delta, p.actual - p.planned);
+    for (const t of c.tasks) assert.ok(C.dayDiff(t.start, t.end) >= 0);
+  }
+  assert.equal(C.siteProgress([], "2026-12-18"), null);
+});
+
+test("見積：明細・諸経費・値引き・消費税・合計・粗利", () => {
+  const est = { lines: [{ qty: 2, price: 1000, cost: 600 }, { qty: 3, price: 333, cost: 200 }, { qty: 0, price: 500 }], overheadPct: 10, discount: 100, taxRate: 10 };
+  const r = C.estimateTotals(est);
+  assert.equal(C.lineAmount({ qty: 3, price: 333 }), 999);
+  assert.equal(r.subtotal, 2999);
+  assert.equal(r.overhead, 299);          // 2999 × 10% の切り捨て
+  assert.equal(r.taxable, 2999 + 299 - 100);
+  assert.equal(r.tax, Math.floor(3198 * 0.1));
+  assert.equal(r.total, r.taxable + r.tax);
+  assert.equal(r.cost, 1200 + 600);
+  assert.equal(r.gross, r.taxable - 1800);
+  assert.equal(C.estimateTotals({ lines: [{ qty: 1, price: 100 }], discount: 9999, taxRate: 10 }).total, 0);   // 値引きで0円未満にならない
+  assert.equal(C.estimateTotals({ lines: [{ qty: -1, price: 100 }, { qty: "x", price: 5 }] }).subtotal, 0);   // 不正な値は0円
+  assert.equal(C.estimateTotals({ lines: [{ qty: 1, price: 100 }] }).gross, null);                              // 原価が無ければ粗利は出さない
+});
+
+test("見積日から売上月の名前を作る", () => {
+  assert.equal(C.monthLabelOf("2026-12-18"), "12月");
+  assert.equal(C.monthLabelOf("2027-01-05"), "1月");
+  assert.equal(C.monthLabelOf("2027-10-31"), "10月");
+  assert.equal(C.monthLabelOf("2027-13-01"), null);
+  assert.equal(C.monthLabelOf(""), null);
+  assert.equal(C.monthLabelOf(undefined), null);
+});
