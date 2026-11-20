@@ -30,13 +30,13 @@ export function drawChart(wrap, s, o) {
   const light = document.documentElement.dataset.theme === "light";
   const key = o.metric, L = s.L, N = 12, label = METRIC_LABEL[key];
   const act = s[key], plan = s.plan[key], prev = s.prev[key];
-  const cA = C.cumulative(act), cP = C.cumulative(plan), cV = C.cumulative(prev);
+  const cA = C.cumulative(act), cP = C.cumulative(plan), cV = C.cumulative(prev), cPf = C.cumulative(s.profit);
   let a = 0, b = N - 1;
   if (o.range === "6") { a = Math.max(0, L - 5); b = L; }
   if (o.range === "3") { a = Math.max(0, L - 2); b = L; }
   const idx = []; for (let i = a; i <= b; i++) idx.push(i);
   const showBars = o.mode !== "cum" && o.ser.bars, showCum = o.mode !== "monthly" && o.ser.cum, showPlan = o.ser.plan;
-  const costLike = key === "cost";
+  const costLike = key === "cost", showProfitLine = showCum && o.ser.profitLine !== false && key !== "profit";
   const stacked = key === "sales" || key === "cost";   // 売上＝資材＋人件費＋利益、原価＝資材＋人件費
 
   const bb = wrap.getBoundingClientRect();
@@ -51,6 +51,7 @@ export function drawChart(wrap, s, o) {
   const mv = [], cv = [];
   idx.forEach(i => {
     if (showBars) { if (isNum(act[i])) mv.push(act[i]); if (showPlan) mv.push(plan[i]); if (o.showYoY && isNum(prev[i])) mv.push(prev[i]); }
+    if (showProfitLine && i <= L && isNum(cPf[i])) cv.push(cPf[i]);
     if (showCum) { if (isNum(cA[i])) cv.push(cA[i]); if (showPlan) cv.push(cP[i]); if (o.showYoY && isNum(cV[i])) cv.push(cV[i]); }
   });
   if (!mv.length) mv.push(0, 1); if (!cv.length) cv.push(0, 1);
@@ -183,6 +184,18 @@ export function drawChart(wrap, s, o) {
       el("path", { d: dv, fill: "none", stroke: col.prev, "stroke-width": 2.6, "stroke-linecap": "round" }, svg);
       ptsV.forEach(p => el("circle", { cx: p[0], cy: p[1], r: sm ? 2.6 : 3.8, fill: col.bg, stroke: col.prev, "stroke-width": 2 }, svg));
     }
+    // 利益の累計（利益総額の推移）：水色の線と丸印。右の目盛り（累計）で読む
+    if (showProfitLine) {
+      const pf = []; idx.forEach((i, k) => { if (i <= L && isNum(cPf[i])) pf.push([cx(k), yC(cPf[i]), i]); });
+      if (pf.length) {
+        const dpf = smooth(pf);
+        el("path", { d: dpf, fill: "none", stroke: col.bg, "stroke-width": 6, opacity: .6, "stroke-linecap": "round" }, svg);
+        el("path", { d: dpf, fill: "none", stroke: col.prof[1], "stroke-width": 3, "stroke-linecap": "round", filter: "url(#glow)" }, svg);
+        pf.forEach(p => el("circle", { cx: p[0], cy: p[1], r: sm ? 2.8 : 4, fill: col.bg, stroke: col.prof[1], "stroke-width": 2 }, svg));
+        const e = pf[pf.length - 1], tx = el("text", { x: e[0] + 4, y: e[1] + 16, "text-anchor": "end", fill: col.prof[1], stroke: col.bg, "stroke-width": 3, "paint-order": "stroke", "font-size": sm ? 10 : 12.5, "font-weight": 700 }, svg);
+        tx.textContent = `利益累計 ${fmtMan(cPf[e[2]])}`;
+      }
+    }
     if (ptsA.length) {
       const d = smooth(ptsA);
       // もや（ゆっくり明るさが変わる光）
@@ -234,8 +247,14 @@ export function drawChart(wrap, s, o) {
         rows.push(`<span style="color:var(--c-lab2)">■</span> 人件費 ${fmtMan(bd.labor)} 万円${pc(bd.labor)}`);
         rows.push(`<span style="color:var(--c-prof2)">■</span> 利益 ${fmtMan(bd.profit)} 万円${pc(bd.profit)}`);
       }
+      if (hasA && key === "cost") {
+        const pc = x => (act[i] ? ` <span style="opacity:.75">${(x / act[i] * 100).toFixed(1)}%</span>` : "");
+        rows.push(`<span style="color:var(--c-mat2)">■</span> 資材費 ${fmtMan(s.materials[i])} 万円${pc(s.materials[i])}`);
+        rows.push(`<span style="color:var(--c-lab2)">■</span> 人件費 ${fmtMan(s.labor[i])} 万円${pc(s.labor[i])}`);
+      }
       rows.push(`<span style="color:var(--c-plan)">━</span> 月次の計画 ${fmtMan(plan[i])} 万円`);
       if (hasA) { const d = act[i] - plan[i]; rows.push(`計画との差 <span class="${(costLike ? d <= 0 : d >= 0) ? "up" : "down"}">${fmtMan(d, { sign: true })} 万円</span>`); }
+      if (showProfitLine && i <= L && isNum(cPf[i])) rows.push(`<span style="color:var(--c-prof2)">●</span> 利益の累計 <strong>${fmtMan(cPf[i])}</strong> 万円`);
       if (isNum(cA[i])) rows.push(`累計 <strong>${fmtMan(cA[i])}</strong> 万円（計画 ${fmtMan(cP[i])}、差 ${fmtMan(cA[i] - cP[i], { sign: true })}）`);
       else rows.push(`<span style="color:var(--c-plan)">累計の計画 ${fmtMan(cP[i])} 万円</span>`);
       if (o.showYoY && isNum(prev[i])) rows.push(`<span style="color:var(--c-prev)">◆</span> 前年同月 ${fmtMan(prev[i])} 万円`);

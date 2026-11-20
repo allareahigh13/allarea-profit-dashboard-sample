@@ -77,7 +77,7 @@ export function kpi({ tone = "cyan", icon, label, value, unit = "", sub = "", ta
 }
 
 /** ドーナツ。segs: [{label, value, c1, c2}]。 */
-export function donut(segs, main, sub, id) {
+export function donut(segs, main, sub, id, ring = "") {
   const tot = segs.reduce((a, s) => a + Math.max(0, s.value), 0);
   const r = 56, C0 = 2 * Math.PI * r, gap = segs.filter(s => s.value > 0).length > 1 ? 4 : 0;
   let off = 0;
@@ -85,12 +85,13 @@ export function donut(segs, main, sub, id) {
   const arcs = segs.map((s, i) => {
     if (!(s.value > 0) || !(tot > 0)) return "";
     const len = C0 * s.value / tot;
-    const a = `<g style="filter:drop-shadow(0 0 6px ${s.c1}88)"><circle cx="75" cy="75" r="${r}" fill="none" stroke="url(#dg${id}${i})" stroke-width="22" stroke-linecap="round" stroke-dasharray="${Math.max(0.1, len - gap).toFixed(1)} ${C0.toFixed(1)}" stroke-dashoffset="${(-off).toFixed(1)}" transform="rotate(-90 75 75)"/></g>`;
+    const under = `<circle cx="75" cy="75" r="${r}" fill="none" stroke="rgba(6,12,24,.85)" stroke-width="27" stroke-dasharray="${Math.max(0.1, len - gap + 4).toFixed(1)} ${C0.toFixed(1)}" stroke-dashoffset="${(-off + 2).toFixed(1)}" transform="rotate(-90 75 75)"/>`;
+    const a = under + `<g style="filter:drop-shadow(0 0 6px ${s.c1}88)"><circle cx="75" cy="75" r="${r}" fill="none" stroke="url(#dg${id}${i})" stroke-width="22" stroke-linecap="round" stroke-dasharray="${Math.max(0.1, len - gap).toFixed(1)} ${C0.toFixed(1)}" stroke-dashoffset="${(-off).toFixed(1)}" transform="rotate(-90 75 75)"/></g>`;
     off += len; return a;
   }).join("");
   const aria = segs.map(s => `${s.label} ${tot > 0 ? (s.value / tot * 100).toFixed(1) : 0}%`).join("、");
   return `<div class="donut"><svg viewBox="0 0 150 150" role="img" aria-label="${esc(aria)}"><defs>${defs}</defs><circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--track)" stroke-width="22"/>${arcs}</svg>
-  <div class="c"><strong>${esc(main)}</strong><small>${esc(sub)}</small></div></div>`;
+  <div class="c" ${ring ? `style="--ring:${ring}"` : ""}><strong>${esc(main)}</strong><small>${esc(sub)}</small></div></div>`;
 }
 
 /** 数字が 0 から増えて最終値に着く動き。描画が止まっていても最終値は必ず出す。 */

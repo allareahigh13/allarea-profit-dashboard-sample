@@ -477,3 +477,38 @@ test("タスクの進み具合：小項目があれば、チェックの割合�
   assert.equal(C.taskProgress({ status: "完了", progress: 0 }), 100);
   assert.equal(C.taskProgress({ status: "未着手", progress: 0, subs: [] }), 0);
 });
+
+test("秘書の提案：アラートとリマインドのすべての種類に、原因・対応・AIにできること／できないことがある", () => {
+  const kinds = ["遅れ","日報","資材発注","職人の確認","職人の相談","追加・変更","着工前","契約","見積","受付〜見積","工程表","施工の期間","メモ","預けたまま","報告が届いた","報告","新着","催促","差し戻し","期限切れ"];
+  for (const k of kinds) { assert.ok(C.ADVICE_KINDS.includes(k), k + " の提案がありません"); const a = C.secretaryAdvice(k); assert.ok(a.cause && a.steps.length && a.aiCan.length && a.aiCannot.length, k); }
+  assert.ok(C.secretaryAdvice("知らない種類").cause);   // 未知の種類でも、空にならない
+});
+
+test("分析期間：単月・直近3か月・年累計の合計と、期間の名前。先頭の月は範囲をはみ出さない", () => {
+  const s = { L: 3, months: ["4月","5月","6月","7月"], sales: [10,20,30,40], cost: [5,10,15,20], profit: [5,10,15,20], materials: [2,4,6,8], labor: [3,6,9,12], prev: { sales: [8,8,8,8], cost: [4,4,4,4], profit: [4,4,4,4], materials: [1,1,1,1], labor: [3,3,3,3] }, plan: { sales: [10,10,10,10], cost: [5,5,5,5], profit: [5,5,5,5] } };
+  const m = C.periodMetrics(s, "month"), q = C.periodMetrics(s, "quarter"), y = C.periodMetrics(s, "ytd");
+  assert.equal(m.cur.sales, 40); assert.equal(m.label, "7月（単月）"); assert.equal(m.achievement, 400);
+  assert.equal(q.cur.sales, 90); assert.equal(q.label, "5月〜7月（直近3か月）"); assert.equal(q.prevYear.sales, 24);
+  assert.equal(y.cur.sales, 100); assert.equal(y.label, "期初〜7月（年累計）"); assert.equal(y.profitRate, 50);
+  assert.equal(C.periodMetrics({ ...s, L: 0 }, "quarter").n, 1);   // 期初の月でも、3か月に満たない分だけで数える
+  assert.equal(C.periodMetrics({ ...s, L: -1 }, "month"), null);
+});
+
+test("アドバイザーの意見：計画未達なら営業は注意、原価率超過なら財務は注意、商談が無ければ「記録していない」を出す", () => {
+  const base = { pm: { achievement: 80, cur: { sales: 80, cost: 60, profit: 20, materials: 30, labor: 30 }, plan: { sales: 100 }, prevYear: { sales: 90, cost: 60 }, yoyPct: { materials: 20, labor: 5 }, costRate: 75, profitRate: 25 }, funnel: { total: 4, converted: 1, convertRate: 25, won: 1, lost: 1, open: 2, openAmount: 3000000 }, loss: [{ reason: "価格", count: 2 }], planCostRate: 60, ops: { waiting: 1 } };
+  const b = C.adviceBoard(base);
+  const sales = b.find(x => x.who.startsWith("営業")), fin = b.find(x => x.who.startsWith("財務")), org = b.find(x => x.who.startsWith("組織"));
+  assert.equal(sales.tone, "warn"); assert.ok(sales.actions.some(a => a.includes("返事待ち"))); assert.ok(sales.evidence.some(e => e.includes("価格")));
+  assert.equal(fin.tone, "warn"); assert.ok(fin.actions[0].includes("資材"));   // 資材の伸びのほうが大きい
+  assert.equal(org.tone, "warn");
+  const none = C.adviceBoard({ ...base, funnel: { total: 0 } }).find(x => x.who.startsWith("営業"));
+  assert.ok(none.notDone[0].includes("記録していない"));
+  const good = C.adviceBoard({ ...base, pm: { ...base.pm, achievement: 110, costRate: 55 }, ops: {} });
+  assert.equal(good.find(x => x.who.startsWith("営業")).tone, "good"); assert.equal(good.find(x => x.who.startsWith("財務")).tone, "good");
+  for (const x of b) assert.ok(x.headline && x.actions.length, x.who);
+});
+test("担当者の期間の実績：選んだ月の範囲だけを合計する", () => {
+  const adv = { name: "A", interviews: [1,2,3,4], hours: [1,1,1,1], recommended: [1,1,1,1], offers: [0,1,1,1], hires: [0,0,1,1], sales: [10,20,30,40] };
+  const r = C.advisorRange(adv, 1, 3);
+  assert.equal(r.interviews, 9); assert.equal(r.sales, 90); assert.equal(r.hires, 2);
+});

@@ -97,6 +97,9 @@ document.addEventListener("click", e => {
   if (t.dataset.toggle) { const k = t.dataset.toggle === "mom" ? "showMoM" : "showYoY"; state[k] = !state[k]; store.set(k, state[k]); render(); return; }
   if (t.dataset.mode) { state.mode = t.dataset.mode; render(); return; }
   if (t.dataset.metric) { state.metric = t.dataset.metric; render(); return; }
+  if (t.dataset.rpAxis) { state.rp.axis = t.dataset.rpAxis; render(); return; }
+  if (t.dataset.period) { state.period = t.dataset.period; store.set("period", state.period); render(); return; }
+  if (t.dataset.comp2 !== undefined) { state.compMeasure2 = state.compMeasure2 === t.dataset.comp2 ? "all" : t.dataset.comp2; render(); return; }
   if (t.dataset.comp) { state.compMeasure = t.dataset.comp; render(); return; }
   if (t.dataset.ser) { const k = t.dataset.ser; state.ser[k] = !state.ser[k]; render(); return; }
   if (t.dataset.sort) { const k = t.dataset.sort; state.sort = state.sort.key === k ? { key: k, dir: -state.sort.dir } : { key: k, dir: -1 }; render(); return; }
@@ -203,6 +206,7 @@ document.addEventListener("click", e => {
   if (t.dataset.taskTab) { e.preventDefault(); state.tv.tab = t.dataset.taskTab; render(); return; }
   if (t.dataset.addMode !== undefined) { const [key, mode] = t.dataset.addMode.split(":"); TK.setAddMode(key, mode); render(); document.querySelector(`#dockPanel .add-panel input[name=title], main .add-panel input[name=title]`)?.focus(); return; }
   if (t.dataset.subRow) { const box = t.closest("form")?.querySelector("[data-subinputs]"); if (box && box.children.length < 12) { const i = document.createElement("input"); i.className = "cell-in wide"; i.type = "text"; i.name = "sub"; i.maxLength = 80; i.style.minWidth = "0"; i.setAttribute("aria-label", `小項目 ${box.children.length + 1}`); box.appendChild(i); i.focus(); } return; }
+  if (t.dataset.orderDone) { S3.orderToggle(t.dataset.orderDone, true); render(); toast("発注済みにしました（アラートが消えます）。"); return; }
   if (t.dataset.orderDel) { S3.orderRemove(t.dataset.orderDel); render(); toast("発注するものから消しました。"); return; }
   if (t.dataset.subAdd) { const id = t.dataset.subAdd, inp = document.querySelector(`[data-sub-text="${id}"]`), err = TK.taskSubAdd(id, inp?.value); if (err) { toast(err, "err"); return; } render(); toast("小項目を足しました。"); document.querySelector(`[data-sub-text="${id}"]`)?.focus(); return; }
   if (t.dataset.subDel) { const [id, i] = t.dataset.subDel.split(":"); TK.taskSubDel(id, Number(i)); render(); toast("小項目を消しました。"); return; }
@@ -301,7 +305,7 @@ function startVoice(btn) {
   if (rec) { rec.stop(); return; }
   if (!ok) { toast("音声入力を使うには、同意のチェックを入れてください。", "err"); return; }
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { toast("このブラウザは音声入力に対応していません。録音の文字起こしを貼り付けるか、クラウド録音の取り込みを使ってください。", "err"); return; }
+  if (!SR) { toast("このブラウザは音声入力に対応していません。録音の文字起こしを貼り付けるか、Plaud（プラウド）の録音の取り込みを使ってください。", "err"); return; }
   rec = new SR(); rec.lang = "ja-JP"; rec.continuous = true; rec.interimResults = false;
   rec.onresult = ev => { for (let i = ev.resultIndex; i < ev.results.length; i++) if (ev.results[i].isFinal) ta.value += ev.results[i][0].transcript + "。\n"; };
   rec.onerror = ev => { toast(`音声入力でエラーが出ました（${ev.error}）。マイクの許可を確かめてください。`, "err"); };
@@ -315,3 +319,18 @@ let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() 
 applyTheme(); buildRail(); drawDots();
 if (!location.hash) history.replaceState(null, "", "#/pl");
 load().then(ok => ok && render(false));
+
+/* ---------- ガントのバーの詳細（乗せる・押す・キーボードの移動で出す） ---------- */
+(() => {
+  const tip = document.createElement("div"); tip.id = "gtip"; tip.className = "gtip"; tip.hidden = true; tip.setAttribute("role", "tooltip"); document.body.appendChild(tip);
+  let pinned = null;
+  const show = el => { tip.innerHTML = el.dataset.gtip; tip.hidden = false; const r = el.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight; let x = Math.min(innerWidth - tw - 8, Math.max(8, r.left + r.width / 2 - tw / 2)), y = r.bottom + 8; if (y + th > innerHeight - 8) y = Math.max(8, r.top - th - 8); tip.style.left = x + "px"; tip.style.top = y + "px"; };
+  const hide = () => { tip.hidden = true; pinned = null; };
+  document.addEventListener("mouseover", e => { const el = e.target.closest?.("[data-gtip]"); if (el && !pinned) show(el); });
+  document.addEventListener("mouseout", e => { if (e.target.closest?.("[data-gtip]") && !pinned) tip.hidden = true; });
+  document.addEventListener("focusin", e => { const el = e.target.closest?.("[data-gtip]"); if (el) show(el); });
+  document.addEventListener("focusout", e => { if (e.target.closest?.("[data-gtip]") && !pinned) tip.hidden = true; });
+  document.addEventListener("click", e => { const el = e.target.closest?.("[data-gtip]"); if (el) { if (pinned === el) hide(); else { pinned = el; show(el); } } else if (!e.target.closest?.("#gtip")) hide(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  window.addEventListener("hashchange", hide); window.addEventListener("scroll", () => { if (!pinned) tip.hidden = true; }, { passive: true });
+})();

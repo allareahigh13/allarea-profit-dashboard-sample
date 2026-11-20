@@ -1,4 +1,4 @@
-/* 商談記録：いつ・どこで・誰と・何を話して、案件になったか。案件にならなかった商談も残す。商談から案件化・失注までの数字、音声（クラウド録音）の受信箱、見積の叩き台。 */
+/* 商談記録：いつ・どこで・誰と・何を話して、案件になったか。案件にならなかった商談も残す。商談から案件化・失注までの数字、音声（Plaud（プラウド）の録音）の受信箱、見積の叩き台。 */
 import * as C from "./calc.js";
 import { state, getCases, getMeetings, getInbox, saveEdits, saveMore, store } from "./state.js";
 import { esc, kpi, bar } from "./ui.js";
@@ -40,14 +40,14 @@ export function renderTalks() {
     ${cloudHtml()}${formHtml()}${listHtml(ms, cases)}`;
 }
 
-/* ---------- クラウド連携（音声データ）・受信箱 ---------- */
+/* ---------- Plaud連携（音声データ）・受信箱 ---------- */
 function cloudHtml() {
   const inbox = getInbox();
   const items = inbox.map(v => `<div class="inbox-item ${v.imported ? "done" : ""}"><div><b>${esc(v.file)}</b><br><small>${esc(v.recordedAt)}・${v.minutes}分・${esc(v.source)}</small></div><div>${v.imported ? '<span class="chip-ok">取り込み済み</span>' : `<button type="button" class="btn small ok" data-talk-import="${esc(v.id)}">取り込む（記録・案件・見積の叩き台）</button>`}</div></div>`).join("");
-  return `<section class="card panel" id="cloudBox"><div class="ctl-row"><h2 class="ttl">音声データ（クラウド録音）の取り込み</h2><span class="chip-wait">クラウド連携：未接続（見本）</span></div>
-    <p class="sub2">商談が終わると、クラウドの録音サービスから文字起こしが届き、<b>商談記録・案件・見積の叩き台</b>まで自動で作られる形にします。いまは、届いた録音の「受信箱」を、サンプルで再現しています。</p>
+  return `<section class="card panel" id="cloudBox"><div class="ctl-row"><h2 class="ttl">音声データ（Plaud（プラウド）の録音）の取り込み</h2><span class="chip-wait">Plaud連携：未接続（見本）</span></div>
+    <p class="sub2">商談が終わると、Plaud（プラウド）の録音サービスから文字起こしが届き、<b>商談記録・案件・見積の叩き台</b>まで自動で作られる形にします。いまは、届いた録音の「受信箱」を、サンプルで再現しています。</p>
     <div class="inbox">${items || '<div class="empty">届いている録音はありません。</div>'}</div>
-    <details class="dock-add"><summary>つないだあとの流れと、決めること</summary><ol class="memo"><li>商談の録音が、クラウドの録音サービスに上がる（担当者のスマホやレコーダーから）。</li><li>文字起こしが届くと、この受信箱に入る。担当者名・相手・元請けか直接か・物件名・場所・予算・要望が、自動で整理される。</li><li>案件になる商談は、案件管理に「見積り中」で入り、見積の叩き台が付く。担当者が内容を直して使う。</li></ol>
+    <details class="dock-add"><summary>つないだあとの流れと、決めること</summary><ol class="memo"><li>商談の録音が、Plaud（プラウド）の録音サービスに上がる（担当者のスマホやレコーダーから）。</li><li>文字起こしが届くと、この受信箱に入る。担当者名・相手・元請けか直接か・物件名・場所・予算・要望が、自動で整理される。</li><li>案件になる商談は、案件管理に「見積り中」で入り、見積の叩き台が付く。担当者が内容を直して使う。</li></ol>
       <p class="note"><b>つなぐ前に、決めること</b>：①使う録音サービスと契約（費用がかかります）、②お客様に録音の同意をいただく運用、③音声と文字起こしの保存場所と、見られる人の範囲、④録音を外部サービスに送ってよいかの会社の判断。つなぐ作業は、この4つが決まってからです。</p></details></section>`;
 }
 
@@ -119,7 +119,7 @@ export function talkSave(fd, audioName) {
   const resultMap = { "案件化": "合意", "案件化せず": "不成立", "検討中": "検討中" }, guess = state.mt.structured?.resultGuess;
   let caseId = null, note = "";
   if (fd.outcome === "案件化") { const r = makeCase(fd, guess === "合意" ? "合意" : "", id); if (r.error) return r; caseId = r.id; note = `案件管理に「${getCases().find(c => c.id === caseId)?.name || ""}」を入れました（${guess === "合意" ? "受注" : "見積り中"}）。`; }
-  state.meetingsAdded.push({ id, caseId, date: fd.date, time: fd.time || "", place: fd.place || "", withWho: fd.withWho || "", attendees: fd.attendees || "", text: String(fd.text).trim(), source: audioName ? `音声ファイル（${audioName}・未解析）` : (state.mt.importId ? "クラウド録音（取り込み）" : "手入力・貼り付け"), result: resultMap[fd.outcome], outcome: fd.outcome, lossReason: fd.outcome === "案件化せず" ? (fd.lossReason || "") : "" });
+  state.meetingsAdded.push({ id, caseId, date: fd.date, time: fd.time || "", place: fd.place || "", withWho: fd.withWho || "", attendees: fd.attendees || "", text: String(fd.text).trim(), source: audioName ? `音声ファイル（${audioName}・未解析）` : (state.mt.importId ? "Plaud（プラウド）の録音（取り込み）" : "手入力・貼り付け"), result: resultMap[fd.outcome], outcome: fd.outcome, lossReason: fd.outcome === "案件化せず" ? (fd.lossReason || "") : "" });
   if (state.mt.importId) state.inboxDone[state.mt.importId] = true;
   state.mt.form = null; state.mt.structured = null; state.mt.importId = null; saveMore(); return { ok: true, id, caseId, note };
 }

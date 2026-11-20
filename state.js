@@ -13,7 +13,9 @@ export const state = {
   mode: "both",                  // both / monthly / cum
   showMoM: store.get("showMoM", true),
   showYoY: store.get("showYoY", true),
-  ser: { bars: true, plan: true, cum: true },
+  ser: { bars: true, plan: true, cum: true, profitLine: true },
+  period: store.get("period", "month"),   // 分析期間（month / quarter / ytd）。全ページ共通
+  rp: { axis: "month" },                  // レポートの期間の切り替え（week / month / quarter / year）
   compMeasure: "sales",          // 損益構成の見方（sales / cost / profit）
   staffBiz: "all",
   sort: { key: "sales", dir: -1 },

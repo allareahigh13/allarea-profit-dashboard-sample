@@ -3,7 +3,7 @@ import * as C from "./calc.js";
 import { state, getCases, getDispatches, getReports, getAlerts, getMemos, getOrders, orderPatch, orderAdd, saveMore, saveEdits } from "./state.js";
 import { esc, svgI, ICON, kpi } from "./ui.js";
 import { memoFormHtml, memoCard } from "./memos.js";
-import { stageTracker, ganttHtml, stLabel, pill, yen, pct, opt, th } from "./pages2.js";
+import { stageTracker, ganttHtml, flagsHtml, stLabel, pill, yen, pct, opt, th } from "./pages2.js";
 
 const CHECK_LABELS = { neighborhood: "近隣挨拶", materials: "資材の手配", craftsmen: "職人の手配", curing: "養生の準備" };
 const md = d => { const [, m, dd] = d.split("-").map(Number); return `${m}/${dd}`; };
@@ -67,6 +67,39 @@ function overviewHtml(all, sites, progs, alerts, reports) {
 }
 
 
+
+/* ---------- ガントのバーの詳細（根拠）と、要確認のマーク ---------- */
+function ganttCtx() { return { asOf: state.data.asOf, reports: getReports(), ds: getDispatches(), ords: getOrders() }; }
+/** 工程ごとの「要確認」マーク。赤＝急ぎ、黄＝早めに確認。 */
+export function taskFlags(c, t, i, ctx) {
+  const { asOf, reports, ds, ords } = ctx, fl = [], st = C.taskState(t, asOf), exp = Math.round(C.expectedProgress(t, asOf));
+  if (st === "遅れ") fl.push({ c: "red", t: "!", title: `遅れ：予定の終了日（${t.end}）を過ぎています（実績 ${Math.round(t.done)}%）` });
+  else if (st === "遅れ気味") fl.push({ c: "amber", t: "!", title: `遅れ気味：予定 ${exp}% に対して、実績 ${Math.round(t.done)}%` });
+  const d = ds.filter(x => x.caseId === c.id && x.taskIdx === i && x.status !== "了承").slice(-1)[0];
+  if (d && t.done < 100) fl.push(d.status === "相談" ? { c: "red", t: "相", title: `職人（${d.craftsman}）から「代表に相談」が届いています` } : { c: "amber", t: "職", title: `職人（${d.craftsman}）の確認待ち（依頼日 ${d.sentOn}）` });
+  const od = ords.filter(o => o.caseId === c.id && o.taskIdx === i).map(o => C.orderDue(o, t, asOf)).filter(x => x.state === "期限切れ" || x.state === "期限間近");
+  if (od.length && t.done < 100) fl.push({ c: od.some(x => x.state === "期限切れ") ? "red" : "amber", t: "発", title: `資材の発注の期限：未発注が ${od.length}件（${od.some(x => x.state === "期限切れ") ? "期限が過ぎています" : "期限が近づいています"}）` });
+  if (st === "進行中" || st === "遅れ気味" || st === "遅れ") {
+    if (!reports.some(r => r.caseId === c.id && r.date === asOf)) fl.push({ c: "amber", t: "報", title: "今日の日報が、まだ上がっていません" });
+    const pend = reports.filter(r => r.caseId === c.id && r.change && r.change.flag && r.change.approval === "未承認");
+    if (pend.length) fl.push({ c: "amber", t: "変", title: `追加・変更工事の承認待ちが ${pend.length}件あります` });
+  }
+  return fl;
+}
+/** バーに乗せたとき（またはクリックしたとき）に出す、進み具合の根拠。 */
+export function taskTipHtml(c, t, i, ctx) {
+  const { asOf, reports, ds, ords } = ctx, st = C.taskState(t, asOf), exp = Math.round(C.expectedProgress(t, asOf)), act = Math.round(t.done), dur = C.dayDiff(t.start, t.end) + 1, passed = Math.max(0, Math.min(dur, C.dayDiff(t.start, asOf) + 1));
+  const last = reports.filter(r => r.caseId === c.id).sort((a, b) => b.date.localeCompare(a.date))[0], d = ds.filter(x => x.caseId === c.id && x.taskIdx === i).slice(-1)[0];
+  const my = ords.filter(o => o.caseId === c.id && o.taskIdx === i), notYet = my.filter(o => !o.orderedOn), fl = taskFlags(c, t, i, ctx);
+  const gap = act - exp;
+  return `<b>${esc(c.name)}｜${esc(t.name)}</b><div class="gt-row">${md(t.start)}〜${md(t.end)}（全${dur}日・${passed}日目）　状態：${esc(st)}</div>
+    <div class="gt-row"><b>進み具合 ${act}%</b>（予定 ${exp}%・<span class="${gap >= 0 ? "up" : "down"}">${gap >= 0 ? "+" : ""}${gap}ポイント</span>）</div>
+    <div class="gt-bar"><i style="width:${Math.min(100, act)}%"></i><u style="left:${Math.min(100, exp)}%" title="予定"></u></div>
+    <div class="gt-row small">根拠：${last ? `最後の日報 ${md(last.date)}（${esc(last.author)}）「${esc(String(last.text).slice(0, 40))}」` : "日報の記録はまだありません"}。進み具合は、工程ごとに入力された値です。</div>
+    <div class="gt-row small">職人：${esc(t.craftsman || d?.craftsman || "未定")}${t.confirmed ? "（確認済み）" : d ? "（" + (d.status === "了承" ? "確認済み" : d.status === "相談" ? "相談あり" : "確認待ち") + "）" : ""}${my.length ? `／資材 ${my.length}件（未発注 ${notYet.length}）` : ""}</div>
+    ${fl.length ? `<div class="gt-flags">${fl.map(f => `<span class="f-${f.c}">${esc(f.t)}</span> ${esc(f.title)}`).join("<br>")}</div>` : `<div class="gt-row small up">要確認の項目はありません。</div>`}`;
+}
+
 /* ---------- 全案件のガントチャート（1本が1案件。クリックで詳細） ---------- */
 const GROUP_ORDER = ["進行中", "受注", "見積り中", "請求済", "入金済", "失注", ""];
 const STCLS = { "見積り中": "amber", "受注": "sky", "進行中": "violet", "請求済": "teal", "入金済": "green", "失注": "gray", "": "none" };
@@ -87,14 +120,15 @@ export function masterGanttHtml(all, alerts) {
   const ticks = []; for (let d = a; C.dayDiff(d, b) >= 0; d = C.addDays(d, 7)) ticks.push(d);
   const head = `<div class="g-row g-head"><div class="g-label">案件（クリックで詳細）</div><div class="g-line">${ticks.map(t => `<span class="g-tick" style="left:${left(t)}%">${md(t)}</span>`).join("")}</div></div>`;
   const today = `<i class="g-today" style="left:${left(asOf)}%" title="今日（${asOf}）"></i>`;
-  let lastGroup = null;
+  let lastGroup = null; const gctx = ganttCtx();
   const body = rows.map(r => {
     const c = r.c, g = c.status || "", sel = state.site.pick === c.id, hi = r.alerts.filter(x => x.level === "高").length;
     const gh = g !== lastGroup ? `<div class="g-group">${pill(c.status)} <small>${rows.filter(x => (x.c.status || "") === g).length}件</small></div>` : ""; lastGroup = g;
     let segs = "";
     if (r.span) {
-      if (c.tasks.length) segs = c.tasks.map(t => { const st = C.taskState(t, asOf), cl = { "完了": "ok", "進行中": "go", "遅れ気味": "warn", "遅れ": "late", "未着手": "wait" }[st]; const x = left(t.start), w = Math.max(0.8, left(C.addDays(t.end, 1)) - x);
-        return `<div class="g-bar ${cl} seg" style="left:${x}%;width:${w}%" title="${esc(t.name)}：${md(t.start)}〜${md(t.end)}（${Math.round(t.done)}%・${st}）"><i style="width:${Math.max(0, Math.min(100, t.done))}%"></i></div>`; }).join("");
+      if (c.tasks.length) segs = c.tasks.map((t, ti) => { const st = C.taskState(t, asOf), cl = { "完了": "ok", "進行中": "go", "遅れ気味": "warn", "遅れ": "late", "未着手": "wait" }[st]; const x = left(t.start), w = Math.max(0.8, left(C.addDays(t.end, 1)) - x);
+        const fl = ["進行中", "遅れ気味", "遅れ"].includes(st) ? taskFlags(c, t, ti, gctx) : [];
+        return `<div class="g-bar ${cl} seg" style="left:${x}%;width:${w}%" data-gtip="${esc(taskTipHtml(c, t, ti, gctx))}" tabindex="0" role="button" aria-label="${esc(c.name)}の${esc(t.name)}：${Math.round(t.done)}%・${st}"><i style="width:${Math.max(0, Math.min(100, t.done))}%"></i></div>${flagsHtml(fl, left(C.addDays(t.end, 1)))}`; }).join("");
       else { const x = left(r.span.start), w = Math.max(1, left(C.addDays(r.span.end, 1)) - x); segs = `<div class="g-bar st-${STCLS[g]} ${g === "失注" ? "lost" : ""}" style="left:${x}%;width:${w}%" title="${esc(r.span.kind)}：${md(r.span.start)}〜${md(r.span.end)}"><span>${esc(r.span.kind)}</span></div>`; }
     } else segs = `<div class="g-none" style="left:${left(asOf)}%">日程が未登録</div>`;
     const ps = r.prog ? ` ${Math.round(r.prog.actual)}%` : "";
@@ -154,7 +188,7 @@ function detailHtml(all, sites, alerts, reports) {
     <div class="now-box"><small>次</small><b>${now.doing.length ? (c.tasks.find(t => t.done < 100 && t !== now.doing[0] && C.parseDate(t.start) > C.parseDate(asOf))?.name || "（これが最後の工程）") : now.next ? esc(now.next.name) : "—"}</b><span>${now.next ? md(now.next.start) + "〜" + md(now.next.end) : "工期 " + p.start + " 〜 " + p.end}</span></div>
     <div class="now-box ${pend ? "warn" : ""}"><small>追加・変更工事</small><b>${chg.length ? chg.length + "件" : "なし（工程どおり）"}</b><span>${pend ? `承認待ち ${pend}件` : chg.length ? "すべて承認済み" : "日報に出ると、ここに表示されます"}</span></div></div>`;
   const checks = c.checklist ? `<div class="checks" role="group" aria-label="着工前の準備">${Object.keys(CHECK_LABELS).map(k => `<label class="chk"><input type="checkbox" data-check="${esc(c.id)}:${k}" ${c.checklist[k] ? "checked" : ""}> ${CHECK_LABELS[k]}</label>`).join("")}</div>` : `<p class="note">この現場には、着工前チェックの記録がありません。</p>`;
-  const ords = getOrders().filter(o => o.caseId === c.id && c.tasks[o.taskIdx]).map(o => ({ ...o, task: c.tasks[o.taskIdx], due: C.orderDue(o, c.tasks[o.taskIdx], asOf) }));
+  const gctx = ganttCtx(), ords = getOrders().filter(o => o.caseId === c.id && c.tasks[o.taskIdx]).map(o => ({ ...o, task: c.tasks[o.taskIdx], due: C.orderDue(o, c.tasks[o.taskIdx], asOf) }));
   const ordDates = ords.map(o => o.due.orderBy), minD = [p.start, asOf, ...ordDates.filter(d => !d.startsWith("0"))].sort()[0];
   const a0 = C.addDays(minD, -2), b0 = C.addDays(p.end > asOf ? p.end : asOf, 3);
   const dsByTask = i => ds.filter(d => d.taskIdx === i).slice(-1)[0];
@@ -164,7 +198,7 @@ function detailHtml(all, sites, alerts, reports) {
     const pick = notYet.length ? [...notYet].sort((x, y) => x.due.orderBy.localeCompare(y.due.orderBy))[0] : [...my].sort((x, y) => y.due.orderBy.localeCompare(x.due.orderBy))[0];
     const marks = !my.length ? [] : [{ date: pick.due.orderBy, cls: !notYet.length ? "ok" : pick.due.state === "期限切れ" ? "late" : pick.due.state === "期限間近" ? "near" : "far", text: (!notYet.length ? "✓" : pick.due.state === "期限切れ" ? "!" : "発") + (my.length > 1 ? my.length : ""), title: "資材の発注（" + (notYet.length ? "いちばん早い期限の日" : "すべて発注済み") + "）\n" + my.map(lineOf).join("\n") }];
     const ordNote = my.length ? ` <span class="ord-note ${notYet.some(o => o.due.state === "期限切れ") ? "late" : notYet.some(o => o.due.state === "期限間近") ? "near" : ""}">資材${my.length}件${notYet.length ? "（未発注 " + notYet.length + "）" : "（発注済み）"}</span>` : "";
-    return { marks, labelHtml: `<b>${i + 1}. ${esc(t.name)}</b><small>${esc(who || "職人 未定")} ${badge}${ordNote}</small>`, start: t.start, end: t.end, done: t.done, state: s, title: `${t.name}：${t.start}〜${t.end}／${Math.round(t.done)}%` }; });
+    return { marks, tip: taskTipHtml(c, t, i, gctx), flags: taskFlags(c, t, i, gctx), labelHtml: `<b>${i + 1}. ${esc(t.name)}</b><small>${esc(who || "職人 未定")} ${badge}${ordNote}</small>`, start: t.start, end: t.end, done: t.done, state: s, title: `${t.name}：${t.start}〜${t.end}／${Math.round(t.done)}%` }; });
   const trs = c.tasks.map((t, i) => { const s = C.taskState(t, asOf), d = dsByTask(i); return `<tr><td>${i + 1}</td><td class="txt">${esc(t.name)}</td><td>${md(t.start)}〜${md(t.end)}</td><td>${stLabel(s)}</td><td><input class="cell-in" type="number" min="0" max="100" step="5" inputmode="numeric" aria-label="${esc(t.name)}の進み具合（％）" data-task-pct="${esc(c.id)}:${i}" value="${Math.round(t.done)}"> %</td><td class="txt">${esc(t.craftsman || "未定")}${t.confirmed ? ' <span class="chip-ok">確認済み</span>' : d && d.status === "依頼中" ? ' <span class="chip-wait">確認待ち</span>' : d && d.status === "相談" ? ' <span class="chip-bad">相談あり</span>' : ""}</td><td>${t.done >= 100 ? "" : `<button type="button" class="btn small" data-task-done="${esc(c.id)}:${i}">完了にする</button>`}</td></tr>`; }).join("");
 
   const ordSorted = [...ords].sort((x, y) => (x.due.state === "発注済み") - (y.due.state === "発注済み") || x.due.orderBy.localeCompare(y.due.orderBy));
