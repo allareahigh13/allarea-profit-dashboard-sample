@@ -557,3 +557,10 @@ details>summary::before{content:"＋";margin-right:8px;color:var(--cyan-light)}d
 .chips-row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}.chip-plain{display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;background:rgba(159,179,209,.16);color:var(--text-secondary)}
 
 .ord-note{display:inline-block;margin-top:3px}
+
+/* タスクの追加（頼む／自分のタスク） */
+.dock-hb{display:flex;gap:6px;align-items:center}.btn.plus{font-size:18px;line-height:1;padding:2px 10px;font-weight:700}
+.add-panel{border:1px solid var(--border-glow);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.03)}
+.add-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.add-choice{display:grid;gap:8px}.btn.big{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px;text-align:left;white-space:normal}.btn.big small{font-weight:400;opacity:.75}
+.form-grid .field.full{grid-column:1/-1}.sub-inputs{display:grid;gap:6px;margin-bottom:6px}

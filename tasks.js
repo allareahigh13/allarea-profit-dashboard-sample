@@ -47,16 +47,30 @@ export function taskCardHtml(t, { compact = false } = {}) {
     ${!compact && t.detail ? `<p class="sub2">${esc(t.detail)}</p>` : ""}${t.reportNote && t.status !== "完了" ? `<p class="sub2">${t.status === "差し戻し" ? "差し戻しの理由" : "報告"}：${esc(t.reportNote)}</p>` : ""}${prog}${subHtml}${memoHtml}${acts ? `<div class="req-actions">${acts}</div>` : ""}</article>`;
 }
 
-/* ---------- 依頼のフォーム ---------- */
-export function taskFormHtml({ caseId = "", idp = "tf" } = {}) {
-  const asOf = state.data.asOf, cases = getCases();
-  return `<form class="taskForm" id="${idp}" novalidate data-taskform><div class="form-grid">
-    <div class="field" style="grid-column:span 2"><label for="${idp}_t">頼みたいこと（タスク）</label><input id="${idp}_t" name="title" type="text" maxlength="120" class="cell-in wide" style="min-width:0"></div>
-    <div class="field"><label for="${idp}_a">誰に頼むか</label><select id="${idp}_a" name="assignee" class="sel">${people().map(p => opt(p, state.me === "代表" ? "担当A" : "代表", p === state.me ? p + "（自分）" : p)).join("")}</select></div>
+/* ---------- 追加の入口（「頼む」か「自分のタスクを追加する」か）とフォーム ---------- */
+const addState = key => (key === "dock" ? state.dock : state.tv);
+export const addMode = key => addState(key).add || "";
+export function setAddMode(key, mode) { addState(key).add = mode; }
+const subInputs = idp => `<div class="field full"><label>小項目（なくてOK。いくつでも足せます）</label><div class="sub-inputs" data-subinputs>
+    <input class="cell-in wide" type="text" name="sub" maxlength="80" style="min-width:0" aria-label="小項目 1" placeholder="例：数字を集める"></div>
+    <button type="button" class="btn small" data-sub-row="${idp}">＋ 小項目の欄を足す</button></div>`;
+export function taskFormHtml({ caseId = "", idp = "tf", mode = "ask", key = "page" } = {}) {
+  const asOf = state.data.asOf, cases = getCases(), ask = mode === "ask", others = people().filter(p => p !== state.me);
+  const caseSel = `<div class="field full"><label for="${idp}_c">関係する案件</label><select id="${idp}_c" name="caseId" class="sel"><option value="">（選ばない）</option>${cases.map(c => opt(c.id, caseId, c.name)).join("")}</select></div>`;
+  return `<form class="taskForm" id="${idp}" novalidate data-taskform data-mode="${mode}" data-addkey="${key}"><div class="form-grid">
+    <div class="field full"><label for="${idp}_t">${ask ? "頼みたいタスクの内容" : "タスクの内容"}</label><input id="${idp}_t" name="title" type="text" maxlength="120" class="cell-in wide" style="min-width:0"></div>
+    ${ask ? `<div class="field"><label for="${idp}_a">誰に頼むか</label><select id="${idp}_a" name="assignee" class="sel">${others.map(p => opt(p, others[0], p)).join("")}</select></div>` : ""}
     <div class="field"><label for="${idp}_d">期限</label><input id="${idp}_d" name="due" type="date" value="${C.addDays(asOf, 3)}"></div>
-    <div class="field" style="grid-column:span 2"><label for="${idp}_m">くわしく（なくてOK）</label><input id="${idp}_m" name="detail" type="text" maxlength="200" class="cell-in wide" style="min-width:0"></div>
-    <div class="field" style="grid-column:span 2"><label for="${idp}_c">関係する案件（なくてOK）</label><select id="${idp}_c" name="caseId" class="sel"><option value="">（なし）</option>${cases.map(c => opt(c.id, caseId, c.name)).join("")}</select></div></div>
-    <div class="tools" style="margin-top:10px"><button class="btn" type="submit">この内容で頼む（自分あてなら、自分のタスクになります）</button></div><p class="msg" role="status" data-taskmsg></p></form>`;
+    ${subInputs(idp)}${caseSel}
+    ${ask ? "" : `<div class="field full"><label for="${idp}_m">メモ</label><textarea id="${idp}_m" name="memo" rows="2" maxlength="600" class="cell-in wide" style="min-width:0;width:100%"></textarea></div>`}</div>
+    <div class="tools" style="margin-top:10px"><button class="btn" type="submit">${ask ? "この内容で頼む" : "自分のタスクに追加する"}</button><button class="btn" type="button" data-add-mode="${key}:choose">戻る</button></div><p class="msg" role="status" data-taskmsg></p></form>`;
+}
+export function addPanelHtml(key, { caseId = "", idp = "tf" } = {}) {
+  const m = addMode(key);
+  if (!m) return "";
+  const head = `<div class="add-head"><b>タスクを追加する</b><button type="button" class="btn small" data-add-mode="${key}:">やめる</button></div>`;
+  if (m === "choose") return `<div class="add-panel">${head}<p class="sub2" style="margin-top:0">どちらにしますか？</p><div class="add-choice"><button type="button" class="btn big" data-add-mode="${key}:ask"><b>人に頼む</b><small>相手に届き、報告を受けます</small></button><button type="button" class="btn big" data-add-mode="${key}:self"><b>自分のタスクを追加する</b><small>自分の一覧に入ります</small></button></div></div>`;
+  return `<div class="add-panel">${head}<p class="sub2" style="margin-top:0">${m === "ask" ? "人に頼む" : "自分のタスクを追加する"}</p>${taskFormHtml({ caseId, idp: idp + "_" + m, mode: m, key })}</div>`;
 }
 
 /* ---------- ページ ---------- */
@@ -80,7 +94,7 @@ export function renderTasks(route, post) {
       <p class="sub2">本番では、ログインした本人の専用ページになります。この見本では、「見る人」を切り替えて、依頼する側・受ける側の両方を試せます。</p></section>
     <section class="kpis k5" aria-label="タスクの数">${kpis}</section>
     <section class="card panel"><h2 class="ttl">リマインド（${rem.length}件）</h2>${remHtml}</section>
-    <section class="card panel"><h2 class="ttl">タスクを頼む／自分のタスクを足す</h2>${taskFormHtml({ idp: "tf_page" })}</section>
+    <section class="card panel"><div class="ctl-row"><h2 class="ttl">タスクを追加する</h2><button type="button" class="btn" data-add-mode="page:${addMode("page") ? "" : "choose"}">${addMode("page") ? "閉じる" : "＋ 頼む／自分のタスクを追加"}</button></div>${addPanelHtml("page", { idp: "tf_page" }) || '<p class="sub2" style="margin:0">「＋」を押すと、「人に頼む」か「自分のタスクを追加する」かを選べます。</p>'}</section>
     ${tabs}<section class="card panel"><h2 class="ttl">${v.tab === "mine" ? "自分のタスク" : v.tab === "delegated" ? "人に預けているタスク" : "完了したタスク"}（${list.length}件）</h2><p class="note" style="margin-top:0">${hint}</p><div class="feed">${list.map(t => taskCardHtml(t)).join("") || '<div class="empty">この一覧のタスクはありません。</div>'}</div></section>`;
 }
 
@@ -100,24 +114,26 @@ export function dockHtml() {
   const mine = open(all.filter(t => t.assignee === me)).slice(0, 4), deleg = open(all.filter(t => t.createdBy === me && t.assignee !== me)).slice(0, 4);
   const cid = state.site.sel && location.hash.startsWith("#/sites") ? state.site.sel : state.detail.openId && location.hash.startsWith("#/cases") ? state.detail.openId : "";
   return `<button type="button" class="dock-btn" data-dock-toggle aria-expanded="${o}" aria-controls="dockPanel">${"📋"} タスク <span class="badge" ${n ? "" : "hidden"}>${n}</span></button>
-    <aside class="dock-panel" id="dockPanel" aria-label="タスクの一覧" ${o ? "" : "hidden"}><div class="dock-h"><b>タスク（${esc(me)}）</b><button type="button" class="btn small" data-dock-toggle>閉じる</button></div>
+    <aside class="dock-panel" id="dockPanel" aria-label="タスクの一覧" ${o ? "" : "hidden"}><div class="dock-h"><b>タスク（${esc(me)}）</b><span class="dock-hb"><button type="button" class="btn small plus" data-add-mode="dock:${addMode("dock") ? "" : "choose"}" aria-label="タスクを頼む・自分のタスクを追加する" title="タスクを頼む・追加する">＋</button><button type="button" class="btn small" data-dock-toggle>閉じる</button></span></div>${addPanelHtml("dock", { caseId: cid, idp: "tf_dock" })}
       <div class="ctl"><label for="meSel2">見る人（見本用）</label><select class="sel" id="meSel2" data-me>${people().map(p => opt(p, me)).join("")}</select></div>
       <div class="dock-sum"><span>自分 <b>${cnt.mine}</b></span><span>新着 <b>${cnt.newForMe}</b></span><span>預け中 <b>${cnt.delegated}</b></span><span>報告 <b>${cnt.reportedToMe}</b></span></div>
       <h4>自分のタスク</h4>${mine.map(t => taskCardHtml(t, { compact: true })).join("") || '<p class="sub2">ありません。</p>'}<h4>預けているタスク</h4>${deleg.map(t => taskCardHtml(t, { compact: true })).join("") || '<p class="sub2">ありません。</p>'}
-      <details class="dock-add"><summary>タスクを頼む／足す</summary>${taskFormHtml({ caseId: cid, idp: "tf_dock" })}</details><a class="btn small" href="#/tasks" style="margin-top:8px">タスクのページを開く</a></aside>`;
+      <a class="btn small" href="#/tasks" style="margin-top:8px">タスクのページを開く</a></aside>`;
 }
 
 /* ---------- 操作 ---------- */
 export function taskCreate(fd) {
   const title = String(fd.title || "").trim();
-  if (!title) return { error: "頼みたいこと（タスク）を入れてください。" };
-  if (!fd.assignee) return { error: "誰に頼むかを選んでください。" };
+  const self = fd.mode === "self";
+  if (!title) return { error: self ? "タスクの内容を入れてください。" : "頼みたいタスクの内容を入れてください。" };
+  if (!self && (!fd.assignee || fd.assignee === state.me)) return { error: "誰に頼むかを選んでください（自分のタスクは「自分のタスクを追加する」から入れます）。" };
+  const assignee = self ? state.me : fd.assignee;
   if (fd.due && !/^\d{4}-\d{2}-\d{2}$/.test(fd.due)) return { error: "期限の日付の形が違います。" };
   const ids = getTasks().map(t => t.id); let n = state.taskState.added.length + 1, id = "TN" + String(n).padStart(3, "0");
   while (ids.includes(id)) id = "TN" + String(++n).padStart(3, "0");
-  const self = fd.assignee === state.me;
-  state.taskState.added.push({ id, title, detail: String(fd.detail || "").trim(), caseId: fd.caseId || "", createdBy: state.me, assignee: fd.assignee, createdOn: state.data.asOf, due: fd.due || null, status: "未着手", progress: 0, subs: [], memo: "", ackedOn: self ? state.data.asOf : null, reportedOn: null, reportNote: "", nudges: 0, nudgedOn: null });
-  store.set("taskState", state.taskState); return { ok: true, id, self, to: fd.assignee };
+  const subs = (fd.subs || []).map(x => String(x).trim()).filter(Boolean).slice(0, 12).map(text => ({ text, done: false }));
+  state.taskState.added.push({ id, title, detail: String(fd.detail || "").trim(), caseId: fd.caseId || "", createdBy: state.me, assignee, createdOn: state.data.asOf, due: fd.due || null, status: "未着手", progress: 0, subs, memo: self ? String(fd.memo || "").trim().slice(0, 600) : "", ackedOn: self ? state.data.asOf : null, reportedOn: null, reportNote: "", nudges: 0, nudgedOn: null });
+  store.set("taskState", state.taskState); state.dock.add = ""; state.tv.add = ""; return { ok: true, id, self, to: assignee };
 }
 const A = () => state.data.asOf;
 export const taskAck = id => { const t = getTasks().find(x => x.id === id); taskPatch(id, { ackedOn: A(), status: t.status === "未着手" ? "対応中" : t.status }); };

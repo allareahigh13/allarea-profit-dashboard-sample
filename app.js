@@ -201,6 +201,8 @@ document.addEventListener("click", e => {
   if (t.dataset.voice !== undefined) { startVoice(t); return; }
   if (t.dataset.dockToggle !== undefined) { state.dock.open = !state.dock.open; render(); return; }
   if (t.dataset.taskTab) { e.preventDefault(); state.tv.tab = t.dataset.taskTab; render(); return; }
+  if (t.dataset.addMode !== undefined) { const [key, mode] = t.dataset.addMode.split(":"); TK.setAddMode(key, mode); render(); document.querySelector(`#dockPanel .add-panel input[name=title], main .add-panel input[name=title]`)?.focus(); return; }
+  if (t.dataset.subRow) { const box = t.closest("form")?.querySelector("[data-subinputs]"); if (box && box.children.length < 12) { const i = document.createElement("input"); i.className = "cell-in wide"; i.type = "text"; i.name = "sub"; i.maxLength = 80; i.style.minWidth = "0"; i.setAttribute("aria-label", `小項目 ${box.children.length + 1}`); box.appendChild(i); i.focus(); } return; }
   if (t.dataset.orderDel) { S3.orderRemove(t.dataset.orderDel); render(); toast("発注するものから消しました。"); return; }
   if (t.dataset.subAdd) { const id = t.dataset.subAdd, inp = document.querySelector(`[data-sub-text="${id}"]`), err = TK.taskSubAdd(id, inp?.value); if (err) { toast(err, "err"); return; } render(); toast("小項目を足しました。"); document.querySelector(`[data-sub-text="${id}"]`)?.focus(); return; }
   if (t.dataset.subDel) { const [id, i] = t.dataset.subDel.split(":"); TK.taskSubDel(id, Number(i)); render(); toast("小項目を消しました。"); return; }
@@ -260,9 +262,9 @@ document.addEventListener("submit", async e => {
     render(); toast("発注するものに足しました。発注の期限が、工程表に出ます。"); return;
   }
   if (f.dataset.taskform !== undefined) {
-    e.preventDefault(); const m = f.querySelector("[data-taskmsg]"), r = TK.taskCreate(Object.fromEntries(new FormData(f).entries()));
+    e.preventDefault(); const m = f.querySelector("[data-taskmsg]"), raw = new FormData(f), r = TK.taskCreate({ ...Object.fromEntries(raw.entries()), subs: raw.getAll("sub"), mode: f.dataset.mode });
     if (r.error) { m.className = "msg err"; m.textContent = r.error; return; }
-    render(); toast(r.self ? "自分のタスクに足しました。" : `${r.to} に頼みました。相手のページに「${state.me}からタスクが来ています」と出ます。`); return;
+    render(); toast(r.self ? "自分のタスクに追加しました。" : `${r.to} に頼みました。相手のページに「${state.me}からタスクが来ています」と出ます。`); return;
   }
   if (f.id === "talkForm") {
     e.preventDefault(); const m = document.querySelector("#talkMsg"), fd = Object.fromEntries(new FormData(f).entries()), audio = f.elements.audio?.files?.[0]?.name || "";
